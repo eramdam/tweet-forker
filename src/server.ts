@@ -4,7 +4,7 @@ import { request } from "undici";
 import express from "express";
 import { postTweetToMastodon } from "./post";
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 app.all("*", async (req, res, next) => {
   const secret = req.query.secret || "";
