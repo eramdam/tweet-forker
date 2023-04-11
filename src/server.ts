@@ -6,6 +6,15 @@ import { postTweetToMastodon } from "./post";
 const app = express();
 const port = 8080;
 
+app.all("*", async (req, res, next) => {
+  const secret = req.query.secret || "";
+  if (secret !== process.env.SECRET) {
+    return res.sendStatus(403);
+  }
+
+  return next();
+});
+
 app.get("/", (_req, res) => {
   return res.sendStatus(200);
 });
