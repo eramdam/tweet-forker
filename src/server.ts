@@ -10,20 +10,37 @@ app.get("/", (_req, res) => {
   return res.sendStatus(200);
 });
 
-app.get("/s/:tweetId", async (req, res) => {
-  const fxStatus = (await (
-    await request(`https://api.fxtwitter.com/status/${req.params.tweetId}`)
-  ).body.json()) as { tweet: APITweet };
+app.get("/u", async (req, res) => {
+  try {
+    const url = new URL(String(req.query.url || ""));
+    const id = url.pathname.split("/").pop();
+    console.log({ id });
 
-  if (
-    fxStatus.tweet.author.screen_name?.toLowerCase() !== process.env.SCREEN_NAME
-  ) {
-    return res.sendStatus(403);
+    return res.redirect(`/s/${id}`);
+  } catch (e) {
+    return res.sendStatus(400);
   }
+});
 
-  await postTweetToMastodon(fxStatus.tweet);
+app.get("/s/:tweetId", async (req, res) => {
+  try {
+    const fxStatus = (await (
+      await request(`https://api.fxtwitter.com/status/${req.params.tweetId}`)
+    ).body.json()) as { tweet: APITweet };
 
-  return res.sendStatus(200);
+    if (
+      fxStatus.tweet.author.screen_name?.toLowerCase() !==
+      process.env.SCREEN_NAME
+    ) {
+      return res.sendStatus(403);
+    }
+
+    await postTweetToMastodon(fxStatus.tweet);
+
+    return res.sendStatus(200);
+  } catch (e) {
+    return res.sendStatus(404);
+  }
 });
 
 app.all("*", (req, res) => {
