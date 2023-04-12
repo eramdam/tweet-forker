@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 import { request } from "undici";
-import express from "express";
+import express, { Request, Response } from "express";
 import { postTweetToMastodon } from "./post";
 const app = express();
 const port = process.env.PORT || 8080;
@@ -23,18 +23,18 @@ app.get("/u", async (req, res) => {
   try {
     const url = new URL(String(req.query.url || ""));
     const id = url.pathname.split("/").pop();
-    console.log({ id });
 
-    return res.redirect(`/s/${id}`);
+    return handleStatus(String(id), res);
   } catch (e) {
+    console.error(e);
     return res.sendStatus(400);
   }
 });
 
-app.get("/s/:tweetId", async (req, res) => {
+async function handleStatus(tweetId: string, res: Response) {
   try {
     const fxStatus = (await (
-      await request(`https://api.fxtwitter.com/status/${req.params.tweetId}`)
+      await request(`https://api.fxtwitter.com/status/${tweetId}`)
     ).body.json()) as { tweet: APITweet };
 
     if (
@@ -50,7 +50,7 @@ app.get("/s/:tweetId", async (req, res) => {
   } catch (e) {
     return res.sendStatus(404);
   }
-});
+}
 
 app.all("*", (req, res) => {
   res.sendStatus(404);
