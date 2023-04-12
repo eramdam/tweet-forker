@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p .",
     "typecheck": "tsc --noEmit -p .",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "serve": "forever stop sendToMastodon; forever --uid='sendToMastodon' --append start src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "@types/node": "^18.15.11",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "forever": "^4.0.3",
     "masto": "^5.11.1",
     "prettier": "^2.8.7",
     "tsx": "^3.12.6",
