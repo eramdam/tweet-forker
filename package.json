@@ -7,6 +7,7 @@
     "build": "tsc -p .",
     "typecheck": "tsc --noEmit -p .",
     "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "serve": "forever stop sendToMastodon; forever --uid='sendToMastodon' --append start src/server.js"
   },
   "keywords": [],
