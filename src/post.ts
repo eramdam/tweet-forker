@@ -2,6 +2,7 @@ import fs from "fs";
 import { login, mastodon } from "masto";
 import path from "path";
 import { stream } from "undici";
+import { findStatus } from "./storage";
 
 mastodon.v2.MediaAttachmentRepository;
 
@@ -36,9 +37,15 @@ export async function postTweetToMastodon(tweet: APITweet) {
     })
   );
 
+  const maybeInReplyToId =
+    tweet.replying_to_status && findStatus(tweet.replying_to_status);
+
   const status = await masto.v1.statuses.create({
     status: text,
     visibility: "unlisted",
     mediaIds: attachments.map((attachment) => attachment.id),
+    inReplyToId: maybeInReplyToId ?? undefined,
   });
+
+  return status;
 }

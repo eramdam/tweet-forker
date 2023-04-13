@@ -62,7 +62,7 @@ interface APIAuthor {
 }
 
 interface APIExternalMedia {
-  type: 'video';
+  type: "video";
   url: string;
   height: number;
   width: number;
@@ -82,14 +82,14 @@ interface APIPoll {
 }
 
 interface APIPhoto {
-  type: 'photo';
+  type: "photo";
   url: string;
   width: number;
   height: number;
 }
 
 interface APIMosaicPhoto {
-  type: 'mosaic_photo';
+  type: "mosaic_photo";
   formats: {
     webp: string;
     jpeg: string;
@@ -97,7 +97,7 @@ interface APIMosaicPhoto {
 }
 
 interface APIVideo {
-  type: 'video' | 'gif';
+  type: "video" | "gif";
   url: string;
   thumbnail_url: string;
   width: number;
@@ -134,8 +134,9 @@ interface APITweet {
 
   lang: string | null;
   replying_to: string | null;
+  replying_to_status: string | null;
 
   source: string;
 
-  twitter_card: 'tweet' | 'summary' | 'summary_large_image' | 'player';
+  twitter_card: "tweet" | "summary" | "summary_large_image" | "player";
 }
