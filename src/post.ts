@@ -14,23 +14,23 @@ export async function postTweetToMastodon(tweet: APITweet) {
   });
 
   const attachments = await Promise.all(
-    (media?.photos || []).slice(0, 4).map((photo) => {
+    (media?.photos || media?.videos || []).slice(0, 4).map((photoOrVideo) => {
       return new Promise<
         Awaited<ReturnType<typeof masto.v2.mediaAttachments.create>>
       >(async (resolve) => {
         await stream(
-          photo.url,
+          photoOrVideo.url,
           {
             method: "GET",
           },
-          () => fs.createWriteStream(path.basename(photo.url))
+          () => fs.createWriteStream(path.basename(photoOrVideo.url))
         );
 
         const attachment = await masto.v2.mediaAttachments.create({
-          file: new Blob([fs.readFileSync(path.basename(photo.url))]),
+          file: new Blob([fs.readFileSync(path.basename(photoOrVideo.url))]),
         });
 
-        fs.unlinkSync(path.basename(photo.url));
+        fs.unlinkSync(path.basename(photoOrVideo.url));
 
         resolve(attachment);
       });
