@@ -28,16 +28,29 @@ app.get("/", (_req, res) => {
 app.get("/u", async (req, res) => {
   try {
     const url = new URL(String(req.query.url || ""));
+    const mastodon = req.query.mastodon === "true" ?? true;
+    const bsky = req.query.bsky === "true" ?? true;
     const id = url.pathname.split("/").pop();
 
-    return handleStatus(String(id), res);
+    return handleStatus({
+      tweetId: String(id),
+      res,
+      mastodon,
+      bsky,
+    });
   } catch (e) {
     console.error(e);
     return res.sendStatus(400);
   }
 });
 
-async function handleStatus(tweetId: string, res: Response) {
+async function handleStatus(options: {
+  tweetId: string;
+  res: Response;
+  mastodon: boolean;
+  bsky: boolean;
+}) {
+  const { tweetId, res, mastodon, bsky } = options;
   try {
     const fxStatus = (await (
       await request(`https://api.fxtwitter.com/status/${tweetId}`)
@@ -50,18 +63,22 @@ async function handleStatus(tweetId: string, res: Response) {
       return res.sendStatus(403);
     }
 
-    console.log("Posting to Mastodon...");
-    const toot = await postTweetToMastodon(fxStatus.tweet);
-    const tootId = toot.id;
-    saveStatus(tweetId, tootId, Services.Mastodon);
-    console.log("Toot!");
+    if (mastodon) {
+      console.log("Posting to Mastodon...");
+      const toot = await postTweetToMastodon(fxStatus.tweet);
+      const tootId = toot.id;
+      saveStatus(tweetId, tootId, Services.Mastodon);
+      console.log("Toot!");
+    }
 
-    console.log("Posting to bsky...");
-    const skeet = await postTweetToBluesky(fxStatus.tweet);
-    console.log(skeet);
-    const skeetId = skeet.uri;
-    saveStatus(tweetId, skeetId, Services.Bluesky);
-    console.log("Skeet!");
+    if (bsky) {
+      console.log("Posting to bsky...");
+      const skeet = await postTweetToBluesky(fxStatus.tweet);
+      console.log(skeet);
+      const skeetId = skeet.uri;
+      saveStatus(tweetId, skeetId, Services.Bluesky);
+      console.log("Skeet!");
+    }
 
     return res.sendStatus(200);
   } catch (e) {
