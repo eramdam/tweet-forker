@@ -25,7 +25,7 @@ export async function postTweetToCohost(tweet: APITweet) {
     headline: "",
     adultContent: false,
     cws: [],
-    tags: [],
+    tags: [process.env.COHOST_TAG].filter(Boolean),
     blocks: [
       {
         type: "markdown",
