@@ -7,6 +7,7 @@ import { setupCleanup } from "./cleanup";
 import { Services, saveStatus, writeToDisk } from "./storage";
 import { restoreFromDisk } from "./storage";
 import { postTweetToBluesky } from "./bsky";
+import { postTweetToCohost } from "./cohost";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -28,15 +29,18 @@ app.get("/", (_req, res) => {
 app.get("/u", async (req, res) => {
   try {
     const url = new URL(String(req.query.url || ""));
-    const mastodon = req.query.mastodon === "true" ?? true;
-    const bsky = req.query.bsky === "true" ?? true;
+    const mastodon = req.query.mastodon ? req.query.mastodon === "true" : true;
+    const bsky = req.query.bsky ? req.query.bsky === "true" : true;
+    const cohost = req.query.cohost ? req.query.cohost === "true" : true;
     const id = url.pathname.split("/").pop();
 
+    console.log({ cohost });
     return handleStatus({
       tweetId: String(id),
       res,
       mastodon,
       bsky,
+      cohost,
     });
   } catch (e) {
     console.error(e);
@@ -49,8 +53,9 @@ async function handleStatus(options: {
   res: Response;
   mastodon: boolean;
   bsky: boolean;
+  cohost: boolean;
 }) {
-  const { tweetId, res, mastodon, bsky } = options;
+  const { tweetId, res, mastodon, bsky, cohost } = options;
   try {
     const fxStatus = (await (
       await request(`https://api.fxtwitter.com/status/${tweetId}`)
@@ -78,6 +83,14 @@ async function handleStatus(options: {
       const skeetId = skeet.uri;
       saveStatus(tweetId, skeetId, Services.Bluesky);
       console.log("Skeet!");
+    }
+
+    if (cohost) {
+      console.log("Posting to cohost...");
+      const chost = await postTweetToCohost(fxStatus.tweet);
+      console.log(chost);
+      saveStatus(tweetId, chost, Services.Cohost);
+      console.log("Chost!");
     }
 
     return res.sendStatus(200);

@@ -4,6 +4,7 @@ let cache = new Map<string, string>();
 export enum Services {
   Mastodon = "mastodon",
   Bluesky = "bsky",
+  Cohost = "cohost",
 }
 
 export function saveStatus(
@@ -15,10 +16,13 @@ export function saveStatus(
 }
 
 export function findTootFromTweetId(twitterId: string) {
-  return cache.get(`${twitterId}-mastodon`);
+  return cache.get(`${twitterId}-${Services.Mastodon}`);
 }
 export function findSkeetFromTweetId(twitterId: string) {
-  return cache.get(`${twitterId}-bsky`);
+  return cache.get(`${twitterId}-${Services.Bluesky}`);
+}
+export function findChostFromTweetId(twitterId: string) {
+  return cache.get(`${twitterId}-${Services.Cohost}`);
 }
 
 export function restoreFromDisk() {
