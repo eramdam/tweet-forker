@@ -1,5 +1,5 @@
 {
-  "name": "send-to-mastodon",
+  "name": "tweet-forker",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

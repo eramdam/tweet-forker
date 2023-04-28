@@ -1,6 +1,9 @@
+# Tweet Forker
+
 # What's this?
 
-This is a "manual crossposter" that takes a given tweet's URL, fetches the necessary data and posts it to your Mastodon account. This is useful to me because all the Twitter->Mastodon crossposters are either down, on the way out and/or don't properly support all of Twitter's features so I wanted a way to easily cherry-pick what tweets I wanted to cross-posts without too much overhead.
+This is a "manual crossposter" that takes a given tweet's URL, fetches the necessary data and posts it to your Mastodon, Bluesky and Cohost account.
+This is useful to me because all the Twitter->Mastodon crossposters are either down, on the way out and/or don't properly support all of Twitter's features so I wanted a way to easily cherry-pick what tweets I wanted to cross-posts without too much overhead.
 
 With the imminent demise of Twitter's API, this uses the API of [FixTweet](https://github.com/FixTweet/FixTweet) since I only need read access to a given tweet to work.
 
@@ -8,13 +11,13 @@ With the imminent demise of Twitter's API, this uses the API of [FixTweet](https
 
 - [x] Text tweets
 - [x] Pictures
-- [ ] Videos
+- [x] Videos (Mastodon only since neither Cohost nor Bluesky support them yet)
 
 # Non-goals
 
-- Polls
-- Circles
-- Visibility setting
+- Twitter Polls
+- Twitter Circles
+- Service-specific features like visibility settings/Content Warning on Mastodon
 
 # Setup
 
