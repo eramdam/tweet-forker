@@ -29,7 +29,8 @@ export async function postTweetToCohost(tweet: APITweet) {
     blocks: [
       {
         type: "markdown",
-        markdown: { content: tweet.text },
+        // ugly-ass hack because im too lazy to do proper markdown here
+        markdown: { content: tweet.text.replaceAll("\n", "<br />") },
       },
     ],
     shareOfPostId:
