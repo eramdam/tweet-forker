@@ -2,10 +2,11 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { request } from "undici";
 import express, { Request, Response } from "express";
-import { postTweetToMastodon } from "./post";
+import { postTweetToMastodon } from "./mastodon";
 import { setupCleanup } from "./cleanup";
-import { saveStatus, writeToDisk } from "./storage";
+import { Services, saveStatus, writeToDisk } from "./storage";
 import { restoreFromDisk } from "./storage";
+import { postTweetToBluesky } from "./bsky";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -49,10 +50,18 @@ async function handleStatus(tweetId: string, res: Response) {
       return res.sendStatus(403);
     }
 
-    const status = await postTweetToMastodon(fxStatus.tweet);
-    const statusId = status.id;
+    console.log("Posting to Mastodon...");
+    const toot = await postTweetToMastodon(fxStatus.tweet);
+    const tootId = toot.id;
+    saveStatus(tweetId, tootId, Services.Mastodon);
+    console.log("Toot!");
 
-    saveStatus(tweetId, statusId);
+    console.log("Posting to bsky...");
+    const skeet = await postTweetToBluesky(fxStatus.tweet);
+    console.log(skeet);
+    const skeetId = skeet.uri;
+    saveStatus(tweetId, skeetId, Services.Bluesky);
+    console.log("Skeet!");
 
     return res.sendStatus(200);
   } catch (e) {

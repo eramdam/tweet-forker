@@ -1,23 +1,24 @@
 import fs from "fs";
-import { login, mastodon } from "masto";
+import { login } from "masto";
 import path from "path";
 import { stream } from "undici";
-import { findStatus } from "./storage";
-
-mastodon.v2.MediaAttachmentRepository;
+import { findTootFromTweetId } from "./storage";
 
 export async function postTweetToMastodon(tweet: APITweet) {
   const { text, media } = tweet;
+  console.log(`[mastodon] login`);
   const masto = await login({
     url: process.env.MASTODON_URL || "",
     accessToken: process.env.ACCESS_TOKEN,
   });
 
+  console.log(`[mastodon] uploading images...`);
   const attachments = await Promise.all(
     (media?.photos || media?.videos || []).slice(0, 4).map((photoOrVideo) => {
       return new Promise<
         Awaited<ReturnType<typeof masto.v2.mediaAttachments.create>>
       >(async (resolve) => {
+        console.log(`[mastodon] uploading ${photoOrVideo.url}`);
         await stream(
           photoOrVideo.url,
           {
@@ -38,7 +39,8 @@ export async function postTweetToMastodon(tweet: APITweet) {
   );
 
   const maybeInReplyToId =
-    tweet.replying_to_status && findStatus(tweet.replying_to_status);
+    tweet.replying_to_status && findTootFromTweetId(tweet.replying_to_status);
+  console.log({ maybeInReplyToId });
 
   const status = await masto.v1.statuses.create({
     status: text,

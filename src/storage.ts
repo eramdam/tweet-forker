@@ -1,12 +1,24 @@
 import fs from "fs";
 let cache = new Map<string, string>();
 
-export function saveStatus(twitterId: string, mastodonId: string) {
-  cache.set(twitterId, mastodonId);
+export enum Services {
+  Mastodon = "mastodon",
+  Bluesky = "bsky",
 }
 
-export function findStatus(twitterId: string) {
-  return cache.get(twitterId);
+export function saveStatus(
+  twitterId: string,
+  foreignId: string,
+  service: Services
+) {
+  cache.set(`${twitterId}-${service}`, foreignId);
+}
+
+export function findTootFromTweetId(twitterId: string) {
+  return cache.get(`${twitterId}-mastodon`);
+}
+export function findSkeetFromTweetId(twitterId: string) {
+  return cache.get(`${twitterId}-bsky`);
 }
 
 export function restoreFromDisk() {
