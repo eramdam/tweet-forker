@@ -5,7 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { findChostFromTweetId } from "./storage";
 
-export async function postTweetToCohost(tweet: APITweet) {
+export async function postTweetToCohost(
+  tweet: APITweet,
+  mediaFiles: ReadonlyArray<string>
+) {
   const user = new cohost.User();
   await user.login(process.env.COHOST_EMAIL, process.env.COHOST_PASSWORD);
   const projects = await user.getProjects();
@@ -43,23 +46,14 @@ export async function postTweetToCohost(tweet: APITweet) {
   const draftId = await cohost.Post.create(projectToPostTo, basePost);
 
   const attachmentsData = await Promise.all(
-    (tweet.media?.photos || []).slice(0, 4).map((photo) => {
+    mediaFiles.slice(0, 4).map((photo) => {
       return new Promise<any>(async (resolve) => {
-        console.log(`[cohost] uploading ${photo.url}`);
-        await stream(
-          photo.url,
-          {
-            method: "GET",
-          },
-          () => fs.createWriteStream(path.basename(photo.url))
-        );
+        console.log(`[cohost] uploading ${photo}`);
 
         const block = await projectToPostTo.uploadAttachment(
           draftId,
-          path.basename(photo.url)
+          path.basename(photo)
         );
-
-        fs.unlinkSync(path.basename(photo.url));
 
         resolve(block);
       });

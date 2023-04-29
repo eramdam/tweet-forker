@@ -5,7 +5,10 @@ import path from "path";
 import { stream } from "undici";
 import { findSkeetFromTweetId } from "./storage";
 
-export async function postTweetToBluesky(tweet: APITweet) {
+export async function postTweetToBluesky(
+  tweet: APITweet,
+  mediaFiles: ReadonlyArray<string>
+) {
   const agent = new BskyAgent({ service: "https://staging.bsky.social" });
 
   console.log("[bsky] login");
@@ -17,25 +20,15 @@ export async function postTweetToBluesky(tweet: APITweet) {
 
   console.log("[bsky] upload images if needed");
   const imageRecords = await Promise.all(
-    (media?.photos || []).slice(0, 4).map((photo) => {
+    mediaFiles.slice(0, 4).map((photo) => {
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
         async (resolve) => {
-          await stream(
-            photo.url,
-            {
-              method: "GET",
-            },
-            () => fs.createWriteStream(path.basename(photo.url))
-          );
-
           const response = await agent.uploadBlob(
-            fs.readFileSync(path.basename(photo.url)),
+            fs.readFileSync(path.basename(photo)),
             {
-              encoding: mime.lookup(path.basename(photo.url)) || "",
+              encoding: mime.lookup(path.basename(photo)) || "",
             }
           );
-
-          fs.unlinkSync(path.basename(photo.url));
 
           resolve(response);
         }

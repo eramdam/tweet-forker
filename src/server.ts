@@ -8,6 +8,9 @@ import { Services, saveStatus, writeToDisk } from "./storage";
 import { restoreFromDisk } from "./storage";
 import { postTweetToBluesky } from "./bsky";
 import { postTweetToCohost } from "./cohost";
+import { downloadMedia } from "./media";
+import fs from "node:fs";
+import { compact } from "lodash-es";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -65,30 +68,41 @@ async function handleStatus(options: {
       return res.sendStatus(403);
     }
 
-    if (mastodon) {
-      console.log("Posting to Mastodon...");
-      const toot = await postTweetToMastodon(fxStatus.tweet);
-      const tootId = toot.id;
-      saveStatus(tweetId, tootId, Services.Mastodon);
-      console.log("Toot!");
-    }
+    const mediaFiles = await downloadMedia(fxStatus.tweet);
 
-    if (bsky) {
-      console.log("Posting to bsky...");
-      const skeet = await postTweetToBluesky(fxStatus.tweet);
-      console.log(skeet);
-      const skeetId = skeet.uri;
-      saveStatus(tweetId, skeetId, Services.Bluesky);
-      console.log("Skeet!");
-    }
+    const postingPromises = compact([
+      mastodon &&
+        async function () {
+          console.log("Posting to Mastodon...");
+          const toot = await postTweetToMastodon(fxStatus.tweet, mediaFiles);
+          const tootId = toot.id;
+          saveStatus(tweetId, tootId, Services.Mastodon);
+          console.log("Toot!");
+        },
+      bsky &&
+        async function () {
+          console.log("Posting to bsky...");
+          const skeet = await postTweetToBluesky(fxStatus.tweet, mediaFiles);
+          console.log(skeet);
+          const skeetId = skeet.uri;
+          saveStatus(tweetId, skeetId, Services.Bluesky);
+          console.log("Skeet!");
+        },
+      cohost &&
+        async function () {
+          console.log("Posting to cohost...");
+          const chost = await postTweetToCohost(fxStatus.tweet, mediaFiles);
+          console.log(chost);
+          saveStatus(tweetId, chost, Services.Cohost);
+          console.log("Chost!");
+        },
+    ]);
 
-    if (cohost) {
-      console.log("Posting to cohost...");
-      const chost = await postTweetToCohost(fxStatus.tweet);
-      console.log(chost);
-      saveStatus(tweetId, chost, Services.Cohost);
-      console.log("Chost!");
-    }
+    await Promise.all(postingPromises.map((p) => p()));
+
+    mediaFiles.forEach((file) => {
+      fs.unlinkSync(file);
+    });
 
     return res.sendStatus(200);
   } catch (e) {

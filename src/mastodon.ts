@@ -1,10 +1,12 @@
 import fs from "fs";
 import { login } from "masto";
 import path from "path";
-import { stream } from "undici";
 import { findTootFromTweetId } from "./storage";
 
-export async function postTweetToMastodon(tweet: APITweet) {
+export async function postTweetToMastodon(
+  tweet: APITweet,
+  mediaFiles: ReadonlyArray<string>
+) {
   const { text, media } = tweet;
   console.log(`[mastodon] login`);
   const masto = await login({
@@ -14,24 +16,15 @@ export async function postTweetToMastodon(tweet: APITweet) {
 
   console.log(`[mastodon] uploading images...`);
   const attachments = await Promise.all(
-    (media?.photos || media?.videos || []).slice(0, 4).map((photoOrVideo) => {
+    mediaFiles.slice(0, 4).map((photoOrVideo) => {
       return new Promise<
         Awaited<ReturnType<typeof masto.v2.mediaAttachments.create>>
       >(async (resolve) => {
-        console.log(`[mastodon] uploading ${photoOrVideo.url}`);
-        await stream(
-          photoOrVideo.url,
-          {
-            method: "GET",
-          },
-          () => fs.createWriteStream(path.basename(photoOrVideo.url))
-        );
+        console.log(`[mastodon] uploading ${photoOrVideo}`);
 
         const attachment = await masto.v2.mediaAttachments.create({
-          file: new Blob([fs.readFileSync(path.basename(photoOrVideo.url))]),
+          file: new Blob([fs.readFileSync(path.basename(photoOrVideo))]),
         });
-
-        fs.unlinkSync(path.basename(photoOrVideo.url));
 
         resolve(attachment);
       });
