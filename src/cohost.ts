@@ -41,7 +41,6 @@ export async function postTweetToCohost(
         Number(findChostFromTweetId(tweet.replying_to_status))) ||
       undefined,
   };
-  console.log(basePost);
 
   const draftId = await cohost.Post.create(projectToPostTo, basePost);
 

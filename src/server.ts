@@ -83,7 +83,6 @@ async function handleStatus(options: {
         async function () {
           console.log("Posting to bsky...");
           const skeet = await postTweetToBluesky(fxStatus.tweet, mediaFiles);
-          console.log(skeet);
           const skeetId = skeet.uri;
           saveStatus(tweetId, skeetId, Services.Bluesky);
           console.log("Skeet!");
@@ -92,7 +91,6 @@ async function handleStatus(options: {
         async function () {
           console.log("Posting to cohost...");
           const chost = await postTweetToCohost(fxStatus.tweet, mediaFiles);
-          console.log(chost);
           saveStatus(tweetId, chost, Services.Cohost);
           console.log("Chost!");
         },

@@ -33,7 +33,6 @@ export async function postTweetToMastodon(
 
   const maybeInReplyToId =
     tweet.replying_to_status && findTootFromTweetId(tweet.replying_to_status);
-  console.log({ maybeInReplyToId });
 
   const status = await masto.v1.statuses.create({
     status: text,
