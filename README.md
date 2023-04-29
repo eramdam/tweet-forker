@@ -33,3 +33,13 @@ npm install
 npm run build
 npm run serve
 ```
+
+## How to use
+
+Make a network request looking like this
+
+```
+curl "http://localhost:8080/u?secret=1234&url=https://twitter.com/foobar/status/123&services=mastodon,bsky,cohost"
+```
+
+I personally use an iOS/macOS shortcut that takes a tweet's URL, here it is: https://www.icloud.com/shortcuts/840875fdecaf497e8339260715771fda
