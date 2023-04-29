@@ -108,6 +108,55 @@ async function handleStatus(options: {
   }
 }
 
+app.get("/thread", async (req, res) => {
+  try {
+    const url = new URL(String(req.query.url || ""));
+    const id = url.pathname.split("/").pop();
+    const fxStatus = (await (
+      await request(`https://api.fxtwitter.com/status/${id}`)
+    ).body.json()) as { tweet: APITweet };
+
+    if (!fxStatus.tweet?.replying_to_status) {
+      res.status(400);
+
+      return res.send("Not a thread. Select the last tweet in your thread.");
+    }
+
+    const tweets = await handleTweetInThread([fxStatus.tweet]);
+
+    const hasUnauthorizedAuthor = tweets.some(
+      (t) => t.author.screen_name !== process.env.SCREEN_NAME
+    );
+
+    if (hasUnauthorizedAuthor) {
+      return res.sendStatus(403);
+    }
+
+    const htmlLike = tweets.map((t) => t.text).join("<br /><br />");
+
+    return res.send(htmlLike);
+  } catch (e) {
+    console.error(e);
+    return res.sendStatus(400);
+  }
+});
+
+async function handleTweetInThread(tweets: APITweet[]): Promise<APITweet[]> {
+  const firstTweet = tweets[0];
+  const inReplyTo = firstTweet?.replying_to_status;
+  const isFirstOfThread = !inReplyTo;
+
+  if (isFirstOfThread) {
+    return tweets;
+  }
+
+  const previousTweet = (await (
+    await request(`https://api.fxtwitter.com/status/${inReplyTo}`)
+  ).body.json()) as { tweet: APITweet };
+
+  return handleTweetInThread([previousTweet.tweet, ...tweets]);
+}
+
 app.all("*", (req, res) => {
   res.sendStatus(404);
 });
