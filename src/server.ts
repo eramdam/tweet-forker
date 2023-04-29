@@ -10,7 +10,7 @@ import { postTweetToBluesky } from "./bsky";
 import { postTweetToCohost } from "./cohost";
 import { downloadMedia } from "./media";
 import fs from "node:fs";
-import { compact } from "lodash";
+import _, { compact } from "lodash";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -125,15 +125,16 @@ app.get("/thread", async (req, res) => {
     const tweets = await handleTweetInThread([fxStatus.tweet]);
 
     const hasUnauthorizedAuthor = tweets.some(
-      (t) => t.author.screen_name !== process.env.SCREEN_NAME
+      (t) => t.author.screen_name?.toLowerCase() !== process.env.SCREEN_NAME
     );
 
     if (hasUnauthorizedAuthor) {
       return res.sendStatus(403);
     }
 
-    const htmlLike = tweets.map((t) => t.text).join("<br /><br />");
+    const htmlLike = tweets.map((t) => t.text).join("\n\n");
 
+    res.setHeader("Content-Type", "text/plain");
     return res.send(htmlLike);
   } catch (e) {
     console.error(e);
