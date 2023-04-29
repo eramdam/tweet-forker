@@ -29,18 +29,15 @@ app.get("/", (_req, res) => {
 app.get("/u", async (req, res) => {
   try {
     const url = new URL(String(req.query.url || ""));
-    const mastodon = req.query.mastodon ? req.query.mastodon === "true" : true;
-    const bsky = req.query.bsky ? req.query.bsky === "true" : true;
-    const cohost = req.query.cohost ? req.query.cohost === "true" : true;
+    const services = String(req.query.services).split(",");
     const id = url.pathname.split("/").pop();
 
-    console.log({ cohost });
     return handleStatus({
       tweetId: String(id),
       res,
-      mastodon,
-      bsky,
-      cohost,
+      mastodon: services.includes("mastodon"),
+      bsky: services.includes("bsky"),
+      cohost: services.includes("cohost"),
     });
   } catch (e) {
     console.error(e);
