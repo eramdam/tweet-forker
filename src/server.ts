@@ -10,7 +10,7 @@ import { postTweetToBluesky } from "./bsky";
 import { postTweetToCohost } from "./cohost";
 import { downloadMedia } from "./media";
 import fs from "node:fs";
-import { compact } from "lodash-es";
+import { compact } from "lodash";
 const app = express();
 const port = process.env.PORT || 8080;
 
