@@ -7,5 +7,7 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
+      # Creates empty folder to prevent node_modules from being overwritten by volume
+      - /app/node_modules
     environment:
       PORT: 80
