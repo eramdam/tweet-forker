@@ -4,10 +4,11 @@ import mime from "mime-types";
 import path from "path";
 import { stream } from "undici";
 import { findSkeetFromTweetId } from "./storage";
+import { DownloadedMedia } from "./media";
 
 export async function postTweetToBluesky(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<string>
+  mediaFiles: ReadonlyArray<DownloadedMedia>
 ) {
   const agent = new BskyAgent({ service: "https://staging.bsky.social" });
 
@@ -24,9 +25,9 @@ export async function postTweetToBluesky(
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
         async (resolve) => {
           const response = await agent.uploadBlob(
-            fs.readFileSync(path.basename(photo)),
+            fs.readFileSync(path.basename(photo.filename)),
             {
-              encoding: mime.lookup(path.basename(photo)) || "",
+              encoding: mime.lookup(path.basename(photo.filename)) || "",
             }
           );
 
@@ -74,10 +75,10 @@ export async function postTweetToBluesky(
     embed: imageRecords.length
       ? {
           $type: "app.bsky.embed.images",
-          images: imageRecords.map((r) => {
+          images: imageRecords.map((r, index) => {
             return {
               image: r.data.blob,
-              alt: "",
+              alt: mediaFiles[index]?.altText || "",
             };
           }),
         }

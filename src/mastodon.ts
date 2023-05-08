@@ -2,10 +2,11 @@ import fs from "fs";
 import { login } from "masto";
 import path from "path";
 import { findTootFromTweetId } from "./storage";
+import { DownloadedMedia } from "./media";
 
 export async function postTweetToMastodon(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<string>
+  mediaFiles: ReadonlyArray<DownloadedMedia>
 ) {
   const { text, media } = tweet;
   console.log(`[mastodon] login`);
@@ -23,7 +24,10 @@ export async function postTweetToMastodon(
         console.log(`[mastodon] uploading ${photoOrVideo}`);
 
         const attachment = await masto.v2.mediaAttachments.create({
-          file: new Blob([fs.readFileSync(path.basename(photoOrVideo))]),
+          file: new Blob([
+            fs.readFileSync(path.basename(photoOrVideo.filename)),
+          ]),
+          description: photoOrVideo.altText ?? undefined,
         });
 
         resolve(attachment);

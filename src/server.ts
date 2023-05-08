@@ -99,7 +99,7 @@ async function handleStatus(options: {
     await Promise.all(postingPromises.map((p) => p()));
 
     mediaFiles.forEach((file) => {
-      fs.unlinkSync(file);
+      fs.unlinkSync(file.filename);
     });
 
     return res.sendStatus(200);

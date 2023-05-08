@@ -4,10 +4,11 @@ import { stream } from "undici";
 import fs from "node:fs";
 import path from "node:path";
 import { findChostFromTweetId } from "./storage";
+import { DownloadedMedia } from "./media";
 
 export async function postTweetToCohost(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<string>
+  mediaFiles: ReadonlyArray<DownloadedMedia>
 ) {
   const user = new cohost.User();
   await user.login(process.env.COHOST_EMAIL, process.env.COHOST_PASSWORD);
@@ -51,7 +52,7 @@ export async function postTweetToCohost(
 
         const block = await projectToPostTo.uploadAttachment(
           draftId,
-          path.basename(photo)
+          path.basename(photo.filename)
         );
 
         resolve(block);
@@ -64,11 +65,12 @@ export async function postTweetToCohost(
     postState: 1,
     blocks: [
       ...basePost.blocks,
-      ...attachmentsData.map((a) => {
+      ...attachmentsData.map((a, index) => {
         return {
           type: "attachment",
           attachment: {
             ...a,
+            altText: mediaFiles[index]?.altText ?? "",
           },
         };
       }),
