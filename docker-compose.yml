@@ -5,6 +5,9 @@ services:
     ports:
       - 8080:80
     working_dir: /app
+    deploy:
+      restart_policy:
+        condition: on-failure
     volumes:
       - ./:/app
       # Creates empty folder to prevent node_modules from being overwritten by volume
