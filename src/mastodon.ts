@@ -8,7 +8,7 @@ export async function postTweetToMastodon(
   tweet: APITweet,
   mediaFiles: ReadonlyArray<DownloadedMedia>
 ) {
-  const { text, media } = tweet;
+  const text = tweet.text + (tweet.quote?.url ? ` ${tweet.quote?.url}` : ``);
   console.log(`[mastodon] login`);
   const masto = await login({
     url: process.env.MASTODON_URL || "",

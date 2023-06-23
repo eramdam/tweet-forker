@@ -24,6 +24,10 @@ export async function postTweetToCohost(
     return undefined;
   }
 
+  // ugly-ass hack because im too lazy to do proper markdown here
+  let text = tweet.text.replaceAll("\n", "<br />");
+  text = text + (tweet.quote?.url ? `<br/><br/>${tweet.quote?.url}` : ``);
+
   const basePost = {
     postState: 0,
     headline: "",
@@ -33,8 +37,7 @@ export async function postTweetToCohost(
     blocks: [
       {
         type: "markdown",
-        // ugly-ass hack because im too lazy to do proper markdown here
-        markdown: { content: tweet.text.replaceAll("\n", "<br />") },
+        markdown: { content: text },
       },
     ],
     shareOfPostId:

@@ -13,11 +13,11 @@ export async function postTweetToBluesky(
   const agent = new BskyAgent({ service: "https://staging.bsky.social" });
 
   console.log("[bsky] login");
+  const text = tweet.text + (tweet.quote?.url ? ` ${tweet.quote?.url}` : ``);
   await agent.login({
     identifier: process.env.BSKY_ID || "",
     password: process.env.BSKY_PASSWORD || "",
   });
-  const { media, text } = tweet;
 
   console.log("[bsky] upload images if needed");
   const imageRecords = await Promise.all(
