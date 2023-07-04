@@ -11,6 +11,7 @@ import { postTweetToCohost } from "./cohost";
 import { downloadMedia } from "./media";
 import fs from "node:fs";
 import _, { compact } from "lodash";
+import { expandUrlsInTweetText } from "./redirects";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -57,7 +58,7 @@ async function handleStatus(options: {
 }) {
   const { tweetId, res, mastodon, bsky, cohost } = options;
   try {
-    const fxStatus = (await (
+    let fxStatus = (await (
       await request(`https://api.fxtwitter.com/status/${tweetId}`)
     ).body.json()) as { tweet: APITweet };
 
@@ -67,6 +68,8 @@ async function handleStatus(options: {
     ) {
       return res.sendStatus(403);
     }
+
+    fxStatus.tweet.text = await expandUrlsInTweetText(fxStatus.tweet.text);
 
     const mediaFiles = await downloadMedia(fxStatus.tweet);
 
