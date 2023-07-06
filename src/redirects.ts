@@ -25,5 +25,11 @@ export async function expandUrlsInTweetText(
   compact(results).forEach((result) => {
     newText = newText.replace(result[0], result[1]);
   });
+
+  compact(results).filter((r) => {
+    if (r[1].includes("/photo/1")) {
+      newText = newText.replaceAll(r[1], "").trim();
+    }
+  });
   return newText;
 }
