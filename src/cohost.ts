@@ -51,7 +51,7 @@ export async function postTweetToCohost(
   const attachmentsData = await Promise.all(
     mediaFiles.slice(0, 4).map((photo) => {
       return new Promise<any>(async (resolve) => {
-        console.log(`[cohost] uploading ${photo}`);
+        console.log(`[cohost] uploading ${photo.filename}`);
 
         const block = await projectToPostTo.uploadAttachment(
           draftId,

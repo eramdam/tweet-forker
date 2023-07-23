@@ -19,11 +19,14 @@ export async function postTweetToBluesky(
     password: process.env.BSKY_PASSWORD || "",
   });
 
-  console.log("[bsky] upload images if needed");
+  if (mediaFiles.length > 0) {
+    console.log("[bsky] upload images");
+  }
   const imageRecords = await Promise.all(
     mediaFiles.slice(0, 4).map((photo) => {
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
         async (resolve) => {
+          console.log(`[bsky] uploading ${photo.filename}`);
           const response = await agent.uploadBlob(
             fs.readFileSync(path.basename(photo.filename)),
             {

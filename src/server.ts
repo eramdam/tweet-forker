@@ -57,6 +57,13 @@ async function handleStatus(options: {
   cohost: boolean;
 }) {
   const { tweetId, res, mastodon, bsky, cohost } = options;
+  if (!mastodon && !bsky && !cohost) {
+    return res
+      .status(400)
+      .send(
+        "No services selected! You need to pass `services=mastodon,bsky,cohost`"
+      );
+  }
   try {
     let fxStatus = (await (
       await request(`https://api.fxtwitter.com/status/${tweetId}`)
@@ -66,7 +73,7 @@ async function handleStatus(options: {
       fxStatus.tweet.author.screen_name?.toLowerCase() !==
       process.env.SCREEN_NAME
     ) {
-      return res.sendStatus(403);
+      return res.status(403).send(`You can't post someone else's tweet!`);
     }
 
     fxStatus.tweet.text = await expandUrlsInTweetText(fxStatus.tweet.text);

@@ -15,13 +15,15 @@ export async function postTweetToMastodon(
     accessToken: process.env.ACCESS_TOKEN,
   });
 
-  console.log(`[mastodon] uploading images...`);
+  if (mediaFiles.length > 0) {
+    console.log(`[mastodon] uploading images...`);
+  }
   const attachments = await Promise.all(
     mediaFiles.slice(0, 4).map((photoOrVideo) => {
       return new Promise<
         Awaited<ReturnType<typeof masto.v2.mediaAttachments.create>>
       >(async (resolve) => {
-        console.log(`[mastodon] uploading ${photoOrVideo}`);
+        console.log(`[mastodon] uploading ${photoOrVideo.filename}`);
 
         const attachment = await masto.v2.mediaAttachments.create({
           file: new Blob([
