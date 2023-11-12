@@ -12,7 +12,7 @@ export async function postTweetToMastodon(
   console.log(`[mastodon] login`);
   const masto = await login({
     url: process.env.MASTODON_URL || "",
-    accessToken: process.env.ACCESS_TOKEN,
+    accessToken: process.env.MASTODON_ACCESS_TOKEN,
   });
 
   if (mediaFiles.length > 0) {
