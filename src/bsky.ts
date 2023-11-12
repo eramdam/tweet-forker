@@ -8,7 +8,7 @@ import { DownloadedMedia } from "./media";
 
 export async function postTweetToBluesky(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<DownloadedMedia>
+  mediaFiles: ReadonlyArray<DownloadedMedia>,
 ) {
   const agent = new BskyAgent({ service: "https://staging.bsky.social" });
 
@@ -31,13 +31,13 @@ export async function postTweetToBluesky(
             fs.readFileSync(path.basename(photo.filename)),
             {
               encoding: mime.lookup(path.basename(photo.filename)) || "",
-            }
+            },
           );
 
           resolve(response);
-        }
+        },
       );
-    })
+    }),
   );
 
   console.log("[bsky] text formatting");
@@ -49,7 +49,6 @@ export async function postTweetToBluesky(
   console.log(`[bsky] in reply to ${maybeInReplyToId}]`);
 
   const uriP = maybeInReplyToId ? new AtUri(maybeInReplyToId) : undefined;
-  console.log({ uriP });
   const parentPost = uriP
     ? await agent.getPost({
         repo: uriP.host,
