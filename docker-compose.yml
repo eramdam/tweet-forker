@@ -1,7 +1,7 @@
 services:
   app:
-    image: node:18-alpine
-    command: sh -c "npm install && npm run build && node src/server.js"
+    image: node:20-alpine
+    command: sh -c "npm ci && npm run build && node dist/server.js"
     ports:
       - 8080:80
     working_dir: /app
@@ -14,3 +14,4 @@ services:
       - /app/node_modules
     environment:
       PORT: 80
+      NODE_ENV: production
