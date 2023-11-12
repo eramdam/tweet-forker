@@ -14,12 +14,13 @@ import _, { compact } from "lodash";
 import { expandUrlsInTweetText } from "./redirects";
 const app = express();
 const port = process.env.PORT || 8080;
+const isDev = process.env.NODE_ENV !== "production";
 
 restoreFromDisk();
 
 app.all("*", async (req, res, next) => {
   const secret = req.query.secret || "";
-  if (secret !== process.env.SECRET) {
+  if (secret !== process.env.SECRET && !isDev) {
     return res.sendStatus(403);
   }
 
