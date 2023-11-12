@@ -10,7 +10,7 @@ export enum Services {
 export function saveStatus(
   twitterId: string,
   foreignId: string,
-  service: Services
+  service: Services,
 ) {
   cache.set(`${twitterId}-${service}`, foreignId);
 }

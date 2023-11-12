@@ -36,7 +36,7 @@ app.get("/u", async (req, res) => {
     const url = new URL(
       String(req.query.url || "")
         .replace(/^"/gi, "")
-        .replace(/"$/gi, "")
+        .replace(/"$/gi, ""),
     );
     const services = String(req.query.services).split(",");
     const id = url.pathname.split("/").pop();
@@ -66,7 +66,7 @@ async function handleStatus(options: {
     return res
       .status(400)
       .send(
-        "No services selected! You need to pass `services=mastodon,bsky,cohost`"
+        "No services selected! You need to pass `services=mastodon,bsky,cohost`",
       );
   }
   try {
@@ -140,7 +140,7 @@ app.get("/thread", async (req, res) => {
     const tweets = await handleTweetInThread([fxStatus.tweet]);
 
     const hasUnauthorizedAuthor = tweets.some(
-      (t) => t.author.screen_name?.toLowerCase() !== process.env.SCREEN_NAME
+      (t) => t.author.screen_name?.toLowerCase() !== process.env.SCREEN_NAME,
     );
 
     if (hasUnauthorizedAuthor) {

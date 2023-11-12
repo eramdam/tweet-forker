@@ -6,7 +6,7 @@ import { DownloadedMedia } from "./media";
 
 export async function postTweetToMastodon(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<DownloadedMedia>
+  mediaFiles: ReadonlyArray<DownloadedMedia>,
 ) {
   const text = tweet.text + (tweet.quote?.url ? ` ${tweet.quote?.url}` : ``);
   console.log(`[mastodon] login`);
@@ -32,9 +32,9 @@ export async function postTweetToMastodon(
           });
 
           resolve(attachment);
-        }
+        },
       );
-    })
+    }),
   );
 
   const maybeInReplyToId =

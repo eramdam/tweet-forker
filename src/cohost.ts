@@ -8,18 +8,18 @@ import { DownloadedMedia } from "./media";
 
 export async function postTweetToCohost(
   tweet: APITweet,
-  mediaFiles: ReadonlyArray<DownloadedMedia>
+  mediaFiles: ReadonlyArray<DownloadedMedia>,
 ) {
   const user = new cohost.User();
   await user.login(process.env.COHOST_EMAIL, process.env.COHOST_PASSWORD);
   const projects = await user.getProjects();
   const projectToPostTo = projects.find(
-    (p: any) => p.handle === process.env.COHOST_PAGE
+    (p: any) => p.handle === process.env.COHOST_PAGE,
   );
 
   if (!projectToPostTo) {
     console.error(
-      new Error(`No cohost projects found for ${process.env.COHOST_PAGE}`)
+      new Error(`No cohost projects found for ${process.env.COHOST_PAGE}`),
     );
     return undefined;
   }
@@ -55,12 +55,12 @@ export async function postTweetToCohost(
 
         const block = await projectToPostTo.uploadAttachment(
           draftId,
-          path.basename(photo.filename)
+          path.basename(photo.filename),
         );
 
         resolve(block);
       });
-    })
+    }),
   );
 
   const chost = await cohost.Post.update(projectToPostTo, draftId, {

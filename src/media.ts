@@ -17,7 +17,7 @@ export async function downloadMedia(tweet: APITweet) {
           {
             method: "GET",
           },
-          () => fs.createWriteStream(path.basename(photoOrVideo.url))
+          () => fs.createWriteStream(path.basename(photoOrVideo.url)),
         );
 
         resolve({
@@ -25,6 +25,6 @@ export async function downloadMedia(tweet: APITweet) {
           altText: photoOrVideo.altText || "",
         });
       });
-    })
+    }),
   );
 }

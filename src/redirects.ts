@@ -2,7 +2,7 @@ import { compact } from "lodash";
 import { request } from "undici";
 
 async function findRedirectedUrl(
-  url: string
+  url: string,
 ): Promise<[string, string] | undefined> {
   const res = await request(url, { method: "HEAD" });
   return res.headers["location"]
@@ -11,15 +11,15 @@ async function findRedirectedUrl(
 }
 
 export async function expandUrlsInTweetText(
-  tweetText: string
+  tweetText: string,
 ): Promise<string> {
   const matches = Array.from(
-    tweetText.matchAll(/https:\/\/t.co\/[a-z0-9]{6,10}/gi)
+    tweetText.matchAll(/https:\/\/t.co\/[a-z0-9]{6,10}/gi),
   ).map((i) => i[0]);
 
   let newText = tweetText;
   const results = await Promise.all(
-    matches.map((url) => findRedirectedUrl(url))
+    matches.map((url) => findRedirectedUrl(url)),
   );
 
   compact(results).forEach((result) => {
