@@ -33,7 +33,11 @@ app.get("/", (_req, res) => {
 
 app.get("/u", async (req, res) => {
   try {
-    const url = new URL(String(req.query.url || ""));
+    const url = new URL(
+      String(req.query.url || "")
+        .replace(/^"/gi, "")
+        .replace(/"$/gi, "")
+    );
     const services = String(req.query.services).split(",");
     const id = url.pathname.split("/").pop();
 
