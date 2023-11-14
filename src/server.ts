@@ -3,19 +3,19 @@ import express, { Response } from "express";
 import { compact } from "lodash";
 import fs from "node:fs";
 import { request } from "undici";
-import { postTweetToBluesky } from "./bsky";
+import { blueskyAgent, getPostByUrl, postTweetToBluesky } from "./bsky";
 import { setupCleanup } from "./cleanup";
 import { postTweetToCohost } from "./cohost";
-import { APITweet } from "./types/fxTwitter";
+import { blueskyToForker, twitterToForker } from "./forkerTypes";
 import { postTweetToMastodon } from "./mastodon";
 import { downloadMedia } from "./media";
 import { expandUrlsInTweetText } from "./redirects";
 import { Services, restoreFromDisk, saveStatus, writeToDisk } from "./storage";
-import { twitterToForker } from "./forkerTypes";
+import { APITweet } from "./types/fxTwitter";
+import { isDev } from "./envHelpers";
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
-const isDev = process.env.NODE_ENV !== "production";
 
 restoreFromDisk();
 
@@ -173,36 +173,34 @@ app.get("/_____thread", async (req, res) => {
 });
 
 app.get("/test", async (req, res) => {
+  return res.send(await handleUrl(String(req.query.url)));
+});
+
+async function handleUrl(requestUrl: string) {
   const url = new URL(
-    String(req.query.url || "")
+    String(requestUrl || "")
       .replace(/^"/gi, "")
       .replace(/"$/gi, ""),
   );
-  const id = url.pathname.split("/").pop();
-  let fxStatus = (await (
-    await request(`https://api.fxtwitter.com/status/${id}`)
-  ).body.json()) as { tweet: APITweet };
 
-  return res.send(twitterToForker(fxStatus.tweet));
-});
+  if (url.hostname === "twitter.com" || url.hostname === "x.com") {
+    const id = url.pathname.split("/").pop();
+    let fxStatus = (await (
+      await request(`https://api.fxtwitter.com/status/${id}`)
+    ).body.json()) as { tweet: APITweet };
 
-async function handleTweetInThread(tweets: APITweet[]): Promise<APITweet[]> {
-  const firstTweet = tweets[0];
-  const inReplyTo = firstTweet?.replying_to?.post;
-  const isFirstOfThread = !inReplyTo;
+    return twitterToForker(fxStatus.tweet);
+  } else if (url.hostname === "bsky.app") {
+    await blueskyAgent.login({
+      identifier: process.env.BSKY_ID || "",
+      password: process.env.BSKY_PASSWORD || "",
+    });
+    const bskyPost = await getPostByUrl(url.toString());
 
-  if (isFirstOfThread) {
-    return tweets;
+    console.log(blueskyToForker(bskyPost));
   }
 
-  const previousTweet = (await (
-    await request(
-      `https://api.fxtwitter.com/status/${inReplyTo}`,
-      baseRequestOptions,
-    )
-  ).body.json()) as { tweet: APITweet };
-
-  return handleTweetInThread([previousTweet.tweet, ...tweets]);
+  return undefined;
 }
 
 app.all("*", (req, res) => {
