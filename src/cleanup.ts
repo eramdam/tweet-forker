@@ -1,4 +1,9 @@
+import { isDev } from "./envHelpers";
+
 export function setupCleanup(handler: () => void) {
+  if (isDev) {
+    return;
+  }
   process.stdin.resume(); //so the program will not close instantly
 
   function exitHandler(options: { exit?: boolean }) {
