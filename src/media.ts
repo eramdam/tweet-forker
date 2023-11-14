@@ -1,6 +1,7 @@
 import { stream } from "undici";
 import fs from "node:fs";
 import path from "node:path";
+import { APITweet } from "./types/fxTwitter";
 
 export type DownloadedMedia = {
   altText: string;

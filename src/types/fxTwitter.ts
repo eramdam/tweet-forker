@@ -63,20 +63,30 @@ interface APITranslate {
   target_lang: string;
 }
 
-interface APIExternalMedia {
+// Source https://github.com/FixTweet/FixTweet/blob/main/src/types/types.d.ts
+
+export interface APIAuthor {
+  name?: string;
+  screen_name?: string;
+  avatar_url?: string;
+  avatar_color: string;
+  banner_url?: string;
+}
+
+export interface APIExternalMedia {
   type: "video";
   url: string;
   height: number;
   width: number;
 }
 
-interface APIPollChoice {
+export interface APIPollChoice {
   label: string;
   count: number;
   percentage: number;
 }
 
-interface APIPoll {
+export interface APIPoll {
   choices: APIPollChoice[];
   total_votes: number;
   ends_at: string;
@@ -123,7 +133,7 @@ interface APIPost {
 
   quote?: APIPost;
   poll?: APIPoll;
-  author: APIUser;
+  author: APIAuthor;
 
   media: {
     external?: APIExternalMedia;
@@ -140,7 +150,6 @@ interface APIPost {
     screen_name: string | null;
     post: string | null;
   } | null;
-  replying_to: string | null;
   replying_to_status: string | null;
 
   source: string | null;

@@ -1,17 +1,18 @@
 import * as dotenv from "dotenv";
-dotenv.config();
-import { request } from "undici";
-import express, { Request, Response } from "express";
-import { postTweetToMastodon } from "./mastodon";
-import { setupCleanup } from "./cleanup";
-import { Services, saveStatus, writeToDisk } from "./storage";
-import { restoreFromDisk } from "./storage";
-import { postTweetToBluesky } from "./bsky";
-import { postTweetToCohost } from "./cohost";
-import { downloadMedia } from "./media";
+import express, { Response } from "express";
+import { compact } from "lodash";
 import fs from "node:fs";
-import _, { compact } from "lodash";
+import { request } from "undici";
+import { postTweetToBluesky } from "./bsky";
+import { setupCleanup } from "./cleanup";
+import { postTweetToCohost } from "./cohost";
+import { APITweet } from "./types/fxTwitter";
+import { postTweetToMastodon } from "./mastodon";
+import { downloadMedia } from "./media";
 import { expandUrlsInTweetText } from "./redirects";
+import { Services, restoreFromDisk, saveStatus, writeToDisk } from "./storage";
+import { twitterToForker } from "./forkerTypes";
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
 const isDev = process.env.NODE_ENV !== "production";
@@ -169,6 +170,20 @@ app.get("/_____thread", async (req, res) => {
     console.error(e);
     return res.sendStatus(400);
   }
+});
+
+app.get("/test", async (req, res) => {
+  const url = new URL(
+    String(req.query.url || "")
+      .replace(/^"/gi, "")
+      .replace(/"$/gi, ""),
+  );
+  const id = url.pathname.split("/").pop();
+  let fxStatus = (await (
+    await request(`https://api.fxtwitter.com/status/${id}`)
+  ).body.json()) as { tweet: APITweet };
+
+  return res.send(twitterToForker(fxStatus.tweet));
 });
 
 async function handleTweetInThread(tweets: APITweet[]): Promise<APITweet[]> {

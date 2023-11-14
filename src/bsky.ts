@@ -2,10 +2,10 @@ import { AtUri, BskyAgent, RichText } from "@atproto/api";
 import fs from "fs";
 import mime from "mime-types";
 import path from "path";
-import { stream } from "undici";
-import { findSkeetFromTweetId } from "./storage";
+import { APITweet } from "./types/fxTwitter";
 import { DownloadedMedia } from "./media";
 import { getReplyingTo } from "./fxTwitterHelpers";
+import { findSkeetFromTweetId } from "./storage";
 
 export async function postTweetToBluesky(
   tweet: APITweet,

@@ -4,6 +4,7 @@ import path from "path";
 import { findTootFromTweetId } from "./storage";
 import { DownloadedMedia } from "./media";
 import { getReplyingTo } from "./fxTwitterHelpers";
+import { APITweet } from "./types/fxTwitter";
 
 export async function postTweetToMastodon(
   tweet: APITweet,
