@@ -12,7 +12,7 @@ export async function postTweetToMastodon(
 ) {
   const text = tweet.text + (tweet.quote?.url ? ` ${tweet.quote?.url}` : ``);
   console.log(`[mastodon] login`);
-  const masto = await createRestAPIClient({
+  const masto = createRestAPIClient({
     url: process.env.MASTODON_URL || "",
     accessToken: process.env.MASTODON_ACCESS_TOKEN,
   });

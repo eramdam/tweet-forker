@@ -28,7 +28,7 @@ export function findChostFromTweetId(twitterId: string) {
 export function restoreFromDisk() {
   try {
     const raw = fs.readFileSync("./cache.json", { encoding: "utf-8" });
-    cache = new Map<string, string>(JSON.parse(raw));
+    cache = new Map<string, string>(JSON.parse(raw) as [string, string][]);
   } catch (e) {
     //
   }

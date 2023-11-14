@@ -1,6 +1,8 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { APITweet } from "./types/fxTwitter";
 import { AppBskyEmbedImages } from "@atproto/api";
+import { mastodon } from "masto";
+import { convert as htmlToTextConvert } from "html-to-text";
 
 export function twitterToForker(tweet: APITweet): ForkerPost {
   return {
@@ -44,6 +46,52 @@ export function blueskyToForker(post: AppBskyFeedDefs.PostView): ForkerPost {
     text: (post.record as any).text || "",
     createdAt: post.indexedAt,
     replyingToStatus: null,
+    media: makeMedia(),
+  };
+}
+
+export function mastodonToForker(post: mastodon.v1.Status): ForkerPost {
+  function makeMedia(): ForkerPost["media"] {
+    if (post.mediaAttachments.length <= 0) {
+      return undefined;
+    }
+
+    return post.mediaAttachments
+      .map((m) => {
+        if (m.type === "unknown" || m.type === "audio") {
+          return undefined;
+        }
+
+        return m;
+      })
+      .filter(Boolean)
+      .map((m) => {
+        let type = "";
+
+        if (m.type === "gifv") {
+          type = "gif";
+        } else if (m.type === "image") {
+          type = "photo";
+        } else if (m.type === "video") {
+          type = "video";
+        }
+
+        return {
+          type,
+          url: m.url,
+          altText: m.description || "",
+        } as PhotoOrVideo;
+      });
+  }
+  return {
+    originalSource: "mastodon",
+    id: post.id,
+    url: post.url || post.uri,
+    text: htmlToTextConvert(post.content || "", {
+      wordwrap: false,
+    }),
+    createdAt: post.createdAt,
+    replyingToStatus: post.inReplyToId || null,
     media: makeMedia(),
   };
 }

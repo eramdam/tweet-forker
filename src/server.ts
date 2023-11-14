@@ -1,3 +1,4 @@
+import "@total-typescript/ts-reset";
 import * as dotenv from "dotenv";
 import express, { Response } from "express";
 import { compact } from "lodash";
@@ -6,13 +7,18 @@ import { request } from "undici";
 import { blueskyAgent, getPostByUrl, postTweetToBluesky } from "./bsky";
 import { setupCleanup } from "./cleanup";
 import { postTweetToCohost } from "./cohost";
-import { blueskyToForker, twitterToForker } from "./forkerTypes";
+import {
+  blueskyToForker,
+  mastodonToForker,
+  twitterToForker,
+} from "./forkerTypes";
 import { postTweetToMastodon } from "./mastodon";
 import { downloadMedia } from "./media";
 import { expandUrlsInTweetText } from "./redirects";
 import { Services, restoreFromDisk, saveStatus, writeToDisk } from "./storage";
 import { APITweet } from "./types/fxTwitter";
 import { isDev } from "./envHelpers";
+import { createRestAPIClient } from "masto";
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
@@ -197,7 +203,18 @@ async function handleUrl(requestUrl: string) {
     });
     const bskyPost = await getPostByUrl(url.toString());
 
-    console.log(blueskyToForker(bskyPost));
+    return blueskyToForker(bskyPost);
+  } else if (url.origin === process.env.MASTODON_URL) {
+    const masto = createRestAPIClient({
+      url: process.env.MASTODON_URL || "",
+      accessToken: process.env.MASTODON_ACCESS_TOKEN,
+    });
+
+    const post = await masto.v1.statuses
+      .$select(url.pathname.split("/").pop()!)
+      .fetch();
+
+    return mastodonToForker(post);
   }
 
   return undefined;
