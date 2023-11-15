@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { findChostFromTweetId } from "./storage";
 import { DownloadedMedia } from "./media";
+import { getReplyingTo } from "./fxTwitterHelpers";
 
 export async function postTweetToCohost(
   tweet: APITweet,
@@ -28,6 +29,8 @@ export async function postTweetToCohost(
   let text = tweet.text.replaceAll("\n", "<br />");
   text = text + (tweet.quote?.url ? `<br/><br/>${tweet.quote?.url}` : ``);
 
+  const tweetReplyToId = getReplyingTo(tweet);
+
   const basePost = {
     postState: 0,
     headline: "",
@@ -41,8 +44,7 @@ export async function postTweetToCohost(
       },
     ],
     shareOfPostId:
-      (tweet.replying_to?.post &&
-        Number(findChostFromTweetId(tweet.replying_to.post))) ||
+      (tweetReplyToId && Number(findChostFromTweetId(tweetReplyToId))) ||
       undefined,
   };
 

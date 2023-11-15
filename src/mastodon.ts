@@ -3,6 +3,7 @@ import { createRestAPIClient } from "masto";
 import path from "path";
 import { findTootFromTweetId } from "./storage";
 import { DownloadedMedia } from "./media";
+import { getReplyingTo } from "./fxTwitterHelpers";
 
 export async function postTweetToMastodon(
   tweet: APITweet,
@@ -37,8 +38,8 @@ export async function postTweetToMastodon(
     }),
   );
 
-  const maybeInReplyToId =
-    tweet.replying_to?.post && findTootFromTweetId(tweet.replying_to?.post);
+  const inReplyTo = getReplyingTo(tweet);
+  const maybeInReplyToId = inReplyTo && findTootFromTweetId(inReplyTo);
 
   const status = await masto.v1.statuses.create({
     status: text,

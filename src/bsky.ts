@@ -5,6 +5,7 @@ import path from "path";
 import { stream } from "undici";
 import { findSkeetFromTweetId } from "./storage";
 import { DownloadedMedia } from "./media";
+import { getReplyingTo } from "./fxTwitterHelpers";
 
 export async function postTweetToBluesky(
   tweet: APITweet,
@@ -44,8 +45,8 @@ export async function postTweetToBluesky(
   const rt = new RichText({ text: text });
   await rt.detectFacets(agent);
 
-  const maybeInReplyToId =
-    tweet.replying_to?.post && findSkeetFromTweetId(tweet.replying_to.post);
+  const replyToId = getReplyingTo(tweet);
+  const maybeInReplyToId = replyToId && findSkeetFromTweetId(replyToId);
   console.log(`[bsky] in reply to ${maybeInReplyToId}]`);
 
   const uriP = maybeInReplyToId ? new AtUri(maybeInReplyToId) : undefined;

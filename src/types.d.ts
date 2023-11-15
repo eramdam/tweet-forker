@@ -140,6 +140,8 @@ interface APIPost {
     screen_name: string | null;
     post: string | null;
   } | null;
+  replying_to: string | null;
+  replying_to_status: string | null;
 
   source: string | null;
 

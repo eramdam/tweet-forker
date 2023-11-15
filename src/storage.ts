@@ -13,6 +13,11 @@ export function saveStatus(
   service: Services,
 ) {
   cache.set(`${twitterId}-${service}`, foreignId);
+  console.log({
+    twitterId,
+    foreignId,
+    service,
+  });
 }
 
 export function findTootFromTweetId(twitterId: string) {

@@ -133,7 +133,8 @@ async function handleStatus(options: {
   }
 }
 
-app.get("/thread", async (req, res) => {
+// "Disabled" route but i can't decide if i want to remove the code or not
+app.get("/_____thread", async (req, res) => {
   try {
     const url = new URL(String(req.query.url || ""));
     const id = url.pathname.split("/").pop();
