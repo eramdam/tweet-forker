@@ -22,7 +22,7 @@ export async function downloadMedia(tweet: APITweet) {
 
         resolve({
           filename: path.basename(photoOrVideo.url),
-          altText: photoOrVideo.altText || "",
+          altText: (photoOrVideo as any).altText || "",
         });
       });
     }),

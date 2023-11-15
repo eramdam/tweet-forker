@@ -41,8 +41,8 @@ export async function postTweetToCohost(
       },
     ],
     shareOfPostId:
-      (tweet.replying_to_status &&
-        Number(findChostFromTweetId(tweet.replying_to_status))) ||
+      (tweet.replying_to?.post &&
+        Number(findChostFromTweetId(tweet.replying_to.post))) ||
       undefined,
   };
 

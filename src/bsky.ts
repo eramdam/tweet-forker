@@ -45,7 +45,7 @@ export async function postTweetToBluesky(
   await rt.detectFacets(agent);
 
   const maybeInReplyToId =
-    tweet.replying_to_status && findSkeetFromTweetId(tweet.replying_to_status);
+    tweet.replying_to?.post && findSkeetFromTweetId(tweet.replying_to.post);
   console.log(`[bsky] in reply to ${maybeInReplyToId}]`);
 
   const uriP = maybeInReplyToId ? new AtUri(maybeInReplyToId) : undefined;
