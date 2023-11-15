@@ -18,6 +18,12 @@ const isDev = process.env.NODE_ENV !== "production";
 
 restoreFromDisk();
 
+const baseRequestOptions = {
+  headers: {
+    "User-Agent": "Tweet-Forker/1.0 (+https://github.com/eramdam/tweet-forker)",
+  },
+};
+
 app.all("*", async (req, res, next) => {
   const secret = req.query.secret || "";
   if (secret !== process.env.SECRET && !isDev) {
