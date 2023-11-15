@@ -34,6 +34,11 @@ npm run build
 npm run serve
 ```
 
+## Docker
+
+You will need Docker Compose
+`npm run docker`
+
 ## How to use
 
 Make a network request looking like this

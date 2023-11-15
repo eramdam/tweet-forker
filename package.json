@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit -p .",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
-    "serve": "forever stop 'tweet-forker'; forever --uid='tweet-forker' --append start src/server.js"
+    "serve": "forever stop 'tweet-forker'; forever --uid='tweet-forker' --append start src/server.js",
+    "docker": "npm ci && npm run build && docker compose up"
   },
   "keywords": [],
   "author": "",

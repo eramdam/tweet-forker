@@ -1,7 +1,7 @@
 services:
   app:
     image: node:20-alpine
-    command: sh -c "npm ci && npm run build && node dist/server.js"
+    command: sh -c "node dist/server.js"
     ports:
       - 8080:80
     working_dir: /app
@@ -10,8 +10,6 @@ services:
         condition: on-failure
     volumes:
       - ./:/app
-      # Creates empty folder to prevent node_modules from being overwritten by volume
-      - /app/node_modules
     environment:
       PORT: 80
       NODE_ENV: production
