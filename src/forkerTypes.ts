@@ -1,5 +1,5 @@
 import { AppBskyFeedDefs } from "@atproto/api";
-import { APITweet } from "./types/fxTwitter";
+import { APIPhoto, APITweet } from "./types/fxTwitter";
 import { AppBskyEmbedImages } from "@atproto/api";
 import { mastodon } from "masto";
 import { convert as htmlToTextConvert } from "html-to-text";
@@ -15,9 +15,9 @@ export function twitterToForker(tweet: APITweet): ForkerPost {
       return {
         type: m.type,
         url: m.url,
-        altText: m.altText,
+        altText: m.type === "photo" ? (m as APIPhoto).altText : "",
       };
-    }),
+    }) as PhotoOrVideo[],
     replyingToStatus: tweet.replying_to_status,
   };
 }

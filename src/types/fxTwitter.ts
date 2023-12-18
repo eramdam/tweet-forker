@@ -100,12 +100,12 @@ interface APIMedia {
   height: number;
 }
 
-interface APIPhoto extends APIMedia {
+export interface APIPhoto extends APIMedia {
   type: "photo";
   altText: string;
 }
 
-interface APIVideo extends APIMedia {
+export interface APIVideo extends APIMedia {
   type: "video" | "gif";
   thumbnail_url: string;
   format: string;
@@ -157,7 +157,7 @@ interface APIPost {
   embed_card: "tweet" | "summary" | "summary_large_image" | "player";
 }
 
-interface APITweet extends APIPost {
+export interface APITweet extends APIPost {
   views?: number | null;
   translation?: APITranslate;
 
