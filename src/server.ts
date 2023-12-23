@@ -154,7 +154,10 @@ async function handleUrl(requestUrl: string) {
   if (url.hostname === "twitter.com" || url.hostname === "x.com") {
     const id = url.pathname.split("/").pop();
     let fxStatus = (await (
-      await request(`https://api.fxtwitter.com/status/${id}`)
+      await request(
+        `https://api.fxtwitter.com/status/${id}`,
+        baseRequestOptions,
+      )
     ).body.json()) as { tweet: APITweet };
 
     return twitterToForker(fxStatus.tweet);
