@@ -1,6 +1,6 @@
 services:
   app:
-    image: node:20-alpine
+    image: node:22-alpine
     command: sh -c "node dist/server.js"
     ports:
       - 8080:80
