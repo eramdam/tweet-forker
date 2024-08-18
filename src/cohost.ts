@@ -1,11 +1,9 @@
 // @ts-expect-error
 import cohost from "cohost";
-import { stream } from "undici";
-import fs from "node:fs";
 import path from "node:path";
-import { findChostFromTweetId } from "./storage";
-import { DownloadedMedia } from "./media";
 import { getReplyingTo } from "./fxTwitterHelpers";
+import { DownloadedMedia } from "./media";
+import { findChostFromTweetId } from "./storage";
 
 export async function postTweetToCohost(
   tweet: APITweet,
