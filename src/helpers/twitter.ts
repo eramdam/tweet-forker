@@ -2,6 +2,7 @@ import { stream } from "undici";
 import fs from "node:fs";
 import path from "node:path";
 import { DownloadedMedia } from "./commonTypes";
+import { makeMediaFilepath } from "./media";
 
 export async function downloadTwitterMedia(tweet: APITweet) {
   return await Promise.all(
@@ -13,11 +14,11 @@ export async function downloadTwitterMedia(tweet: APITweet) {
           {
             method: "GET",
           },
-          () => fs.createWriteStream(path.basename(photoOrVideo.url)),
+          () => fs.createWriteStream(makeMediaFilepath(photoOrVideo.url)),
         );
 
         resolve({
-          filename: path.basename(photoOrVideo.url),
+          filename: makeMediaFilepath(photoOrVideo.url),
           altText: (photoOrVideo as any).altText || "",
         });
       });

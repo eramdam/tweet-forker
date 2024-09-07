@@ -5,6 +5,7 @@ import path from "path";
 import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
 import { getTweetReplyingTo } from "./twitter";
+import { makeMediaFilepath } from "./media";
 
 export async function postTweetToBluesky(
   tweet: APITweet,
@@ -28,9 +29,9 @@ export async function postTweetToBluesky(
         async (resolve) => {
           console.log(`[bsky] uploading ${photo.filename}`);
           const response = await agent.uploadBlob(
-            fs.readFileSync(path.basename(photo.filename)),
+            fs.readFileSync(makeMediaFilepath(photo.filename)),
             {
-              encoding: mime.lookup(path.basename(photo.filename)) || "",
+              encoding: mime.lookup(makeMediaFilepath(photo.filename)) || "",
             },
           );
 

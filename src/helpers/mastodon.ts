@@ -1,9 +1,10 @@
 import fs from "fs";
 import { createRestAPIClient, mastodon } from "masto";
-import path from "path";
 import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
 import { getTweetReplyingTo } from "./twitter";
+import { stream } from "undici";
+import { makeMediaFilepath } from "./media";
 
 export class MastodonStatusNotFoundError extends Error {}
 
@@ -29,7 +30,7 @@ export async function postTweetToMastodon(
 
           const attachment = await masto.v2.media.create({
             file: new Blob([
-              fs.readFileSync(path.basename(photoOrVideo.filename)),
+              fs.readFileSync(makeMediaFilepath(photoOrVideo.filename)),
             ]),
             description: photoOrVideo.altText ?? undefined,
           });
@@ -83,4 +84,33 @@ export async function getStatusAndSourceFromMastodonUrl(url: string): Promise<{
 
 export function getMastodonStatusInReplyTo(status: mastodon.v1.Status) {
   return status.inReplyToId;
+}
+
+export async function downloadMastodonMedia(
+  status: mastodon.v1.Status,
+): Promise<ReadonlyArray<DownloadedMedia>> {
+  const media = await Promise.all(
+    status.mediaAttachments
+      .filter((a) => {
+        return a.type.startsWith("image") || a.type.startsWith("audio");
+      })
+      .filter((a): a is mastodon.v1.MediaAttachment & { url: string } => {
+        return Boolean(a.url);
+      })
+      .map(async (attachment) => {
+        return new Promise<DownloadedMedia>(async (resolve) => {
+          console.log(`[mastodon] downloading ${attachment.url}`);
+          await stream(attachment.url, { method: "GET" }, () =>
+            fs.createWriteStream(makeMediaFilepath(attachment.url)),
+          );
+
+          resolve({
+            filename: makeMediaFilepath(attachment.url),
+            altText: attachment.description ?? "",
+          });
+        });
+      }),
+  );
+
+  return media;
 }

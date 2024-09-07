@@ -1,6 +1,7 @@
 import { type Express, type Response } from "express";
 import { parseQuery } from "./routeHelpers";
 import {
+  downloadMastodonMedia,
   getStatusAndSourceFromMastodonUrl,
   MastodonStatusNotFoundError,
 } from "../helpers/mastodon";
@@ -43,9 +44,12 @@ async function handleMastodonPost(options: {
 }) {
   const { res, status, source, postToTwitter, postToBluesky, postToCohost } =
     options;
+
+  const mediaFiles = await downloadMastodonMedia(status);
+
   if (postToCohost) {
     try {
-      const chost = await postMastodonToCohost(status, source, []);
+      const chost = await postMastodonToCohost(status, source, mediaFiles);
       if (chost) {
         savePost.fromMastodon.toCohost(status.id, chost);
         console.log("Chost!");

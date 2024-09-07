@@ -6,6 +6,7 @@ import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
 import { getMastodonStatusInReplyTo } from "./mastodon";
 import { getTweetReplyingTo } from "./twitter";
+import { makeMediaFilepath } from "./media";
 
 export async function postTweetToCohost(
   tweet: APITweet,
@@ -57,7 +58,7 @@ export async function postTweetToCohost(
 
         const block = await projectToPostTo.uploadAttachment(
           draftId,
-          path.basename(photo.filename),
+          makeMediaFilepath(photo.filename),
         );
 
         resolve(block);
@@ -132,11 +133,36 @@ export async function postMastodonToCohost(
   console.log({ mastodonReplyToId, basePost });
 
   const draftId = await cohost.Post.create(projectToPostTo, basePost);
+  const attachmentsData = await Promise.all(
+    mediaFiles.slice(0, 4).map((photo) => {
+      return new Promise<any>(async (resolve) => {
+        console.log(`[cohost] uploading ${photo.filename}`);
+
+        const block = await projectToPostTo.uploadAttachment(
+          draftId,
+          makeMediaFilepath(photo.filename),
+        );
+
+        resolve(block);
+      });
+    }),
+  );
 
   const chost = await cohost.Post.update(projectToPostTo, draftId, {
     ...basePost,
     postState: 1,
-    blocks: [...basePost.blocks],
+    blocks: [
+      ...basePost.blocks,
+      ...attachmentsData.map((a, index) => {
+        return {
+          type: "attachment",
+          attachment: {
+            ...a,
+            altText: mediaFiles[index]?.altText ?? "",
+          },
+        };
+      }),
+    ],
   });
 
   return String(chost);
