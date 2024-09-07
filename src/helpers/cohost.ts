@@ -105,12 +105,19 @@ export async function postMastodonToCohost(
     return undefined;
   }
 
-  const text = source.text;
+  let text = source.text;
   const contentWarnings = source.spoilerText
     ? source.spoilerText.split(",").map((s) => s.trim())
     : [];
 
   const mastodonReplyToId = getMastodonStatusInReplyTo(status);
+
+  if (status.card) {
+    text = text.replace(
+      new RegExp(status.card.url + "$"),
+      `\n\n${status.card.url}`,
+    );
+  }
 
   const basePost = {
     postState: 0,
