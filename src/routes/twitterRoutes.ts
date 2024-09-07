@@ -4,22 +4,18 @@ import { request } from "undici";
 import { postTweetToBluesky } from "../bsky";
 import { postTweetToCohost } from "../cohost";
 import { postTweetToMastodon } from "../mastodon";
-import { downloadMedia } from "../media";
+import { downloadTwitterMedia } from "../helpers/twitter";
 import { expandUrlsInTweetText } from "../redirects";
 import { Services, saveStatus } from "../storage";
 
 import { type Express, type Response } from "express";
 import { baseRequestOptions } from "../server";
+import { parseQuery } from "./routeHelpers";
 
 export function mountTwitterRoutes(app: Express) {
   app.get("/fromTwitter", async (req, res) => {
     try {
-      const url = new URL(
-        String(req.query.url || "")
-          .replace(/^"/gi, "")
-          .replace(/"$/gi, ""),
-      );
-      const services = String(req.query.services).split(",");
+      const { url, services } = parseQuery(req);
       const id = url.pathname.split("/").pop();
 
       return handleTweet({
@@ -68,7 +64,7 @@ export function mountTwitterRoutes(app: Express) {
 
       fxStatus.tweet.text = await expandUrlsInTweetText(fxStatus.tweet.text);
 
-      const mediaFiles = await downloadMedia(fxStatus.tweet);
+      const mediaFiles = await downloadTwitterMedia(fxStatus.tweet);
 
       const postingPromises = compact([
         postToMastodon &&
@@ -82,10 +78,13 @@ export function mountTwitterRoutes(app: Express) {
         postToBluesky &&
           async function () {
             console.log("Posting to bsky...");
-            const skeet = await postTweetToBluesky(fxStatus.tweet, mediaFiles);
-            const skeetId = skeet.uri;
-            saveStatus(tweetId, skeetId, Services.Bluesky);
-            console.log("Skeet!");
+            const blueskyPost = await postTweetToBluesky(
+              fxStatus.tweet,
+              mediaFiles,
+            );
+            const blueskyPostId = blueskyPost.uri;
+            saveStatus(tweetId, blueskyPostId, Services.Bluesky);
+            console.log("Post!");
           },
         postToCohost &&
           async function () {

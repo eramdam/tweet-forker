@@ -3,7 +3,7 @@ import fs from "fs";
 import mime from "mime-types";
 import path from "path";
 import { getReplyingTo } from "./fxTwitterHelpers";
-import { DownloadedMedia } from "./media";
+import { DownloadedMedia } from "./helpers/commonTypes";
 import { findBlueskyPostFromTweetId } from "./storage";
 
 export async function postTweetToBluesky(

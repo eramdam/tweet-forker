@@ -1,13 +1,9 @@
 import { stream } from "undici";
 import fs from "node:fs";
 import path from "node:path";
+import { DownloadedMedia } from "./commonTypes";
 
-export type DownloadedMedia = {
-  altText: string;
-  filename: string;
-};
-
-export async function downloadMedia(tweet: APITweet) {
+export async function downloadTwitterMedia(tweet: APITweet) {
   return await Promise.all(
     (tweet.media?.photos || tweet.media?.videos || []).map((photoOrVideo) => {
       return new Promise<DownloadedMedia>(async (resolve) => {

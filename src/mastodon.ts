@@ -1,8 +1,8 @@
 import fs from "fs";
-import { createRestAPIClient } from "masto";
+import { createRestAPIClient, mastodon } from "masto";
 import path from "path";
 import { findTootFromTweetId } from "./storage";
-import { DownloadedMedia } from "./media";
+import { DownloadedMedia } from "./helpers/commonTypes";
 import { getReplyingTo } from "./fxTwitterHelpers";
 
 export async function postTweetToMastodon(
@@ -50,3 +50,32 @@ export async function postTweetToMastodon(
 
   return status;
 }
+
+export async function getJsonFromMastodon(url: string): Promise<{
+  status: mastodon.v1.Status;
+  source: mastodon.v1.StatusSource;
+}> {
+  const masto = createRestAPIClient({
+    url: process.env.MASTODON_URL || "",
+    accessToken: process.env.MASTODON_ACCESS_TOKEN,
+  });
+
+  const results = await masto.v2.search.list({
+    q: url,
+    resolve: true,
+    limit: 1,
+  });
+
+  const firstStatus = results.statuses[0];
+
+  if (!firstStatus) {
+    throw new MastodonStatusNotFoundError("No status found");
+  }
+
+  const status = await masto.v1.statuses.$select(firstStatus.id).fetch();
+  const source = await masto.v1.statuses.$select(status.id).source.fetch();
+
+  return { status, source };
+}
+
+export class MastodonStatusNotFoundError extends Error {}

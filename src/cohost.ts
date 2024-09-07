@@ -2,7 +2,7 @@
 import cohost from "cohost";
 import path from "node:path";
 import { getReplyingTo } from "./fxTwitterHelpers";
-import { DownloadedMedia } from "./media";
+import { DownloadedMedia } from "./helpers/commonTypes";
 import { findChostFromTweetId } from "./storage";
 
 export async function postTweetToCohost(
