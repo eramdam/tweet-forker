@@ -2,9 +2,9 @@ import { AtUri, AtpAgent, RichText } from "@atproto/api";
 import fs from "fs";
 import mime from "mime-types";
 import path from "path";
-import { getReplyingTo } from "./fxTwitterHelpers";
-import { DownloadedMedia } from "./helpers/commonTypes";
-import { findBlueskyPostFromTweetId } from "./storage";
+import { getReplyingTo } from "../fxTwitterHelpers";
+import { DownloadedMedia } from "./commonTypes";
+import { findBlueskyPostFromTweetId } from "../storage";
 
 export async function postTweetToBluesky(
   tweet: APITweet,

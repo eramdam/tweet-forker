@@ -1,9 +1,9 @@
 import { compact } from "lodash";
 import fs from "node:fs";
 import { request } from "undici";
-import { postTweetToBluesky } from "../bsky";
-import { postTweetToCohost } from "../cohost";
-import { postTweetToMastodon } from "../mastodon";
+import { postTweetToBluesky } from "../helpers/bsky";
+import { postTweetToCohost } from "../helpers/cohost";
+import { postTweetToMastodon } from "../helpers/mastodon";
 import { downloadTwitterMedia } from "../helpers/twitter";
 import { expandUrlsInTweetText } from "../redirects";
 import { Services, saveStatus } from "../storage";

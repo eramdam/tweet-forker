@@ -1,9 +1,9 @@
 // @ts-expect-error
 import cohost from "cohost";
 import path from "node:path";
-import { getReplyingTo } from "./fxTwitterHelpers";
-import { DownloadedMedia } from "./helpers/commonTypes";
-import { findChostFromTweetId } from "./storage";
+import { getReplyingTo } from "../fxTwitterHelpers";
+import { findChostFromTweetId } from "../storage";
+import { DownloadedMedia } from "./commonTypes";
 
 export async function postTweetToCohost(
   tweet: APITweet,
@@ -24,8 +24,7 @@ export async function postTweetToCohost(
   }
 
   // ugly-ass hack because im too lazy to do proper markdown here
-  let text = tweet.text.replaceAll("\n", "<br />");
-  text = text + (tweet.quote?.url ? `<br/><br/>${tweet.quote?.url}` : ``);
+  const text = tweet.text.replaceAll("\n", "<br />");
 
   const tweetReplyToId = getReplyingTo(tweet);
 

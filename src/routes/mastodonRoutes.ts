@@ -1,6 +1,9 @@
 import { type Express, type Response } from "express";
 import { parseQuery } from "./routeHelpers";
-import { getJsonFromMastodon } from "../mastodon";
+import {
+  getStatusAndSourceFromMastodonUrl,
+  MastodonStatusNotFoundError,
+} from "../helpers/mastodon";
 import { mastodon } from "masto";
 
 export function mountMastodonRoutes(app: Express) {
@@ -8,7 +11,7 @@ export function mountMastodonRoutes(app: Express) {
     try {
       const { url, services } = parseQuery(req);
 
-      const json = await getJsonFromMastodon(url.toString());
+      const json = await getStatusAndSourceFromMastodonUrl(url.toString());
       console.log(json);
 
       return handleMastodonPost({
@@ -20,6 +23,10 @@ export function mountMastodonRoutes(app: Express) {
       });
     } catch (e) {
       console.error(e);
+
+      if (e instanceof MastodonStatusNotFoundError) {
+        return res.sendStatus(404);
+      }
       return res.sendStatus(400);
     }
   });

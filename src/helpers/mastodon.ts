@@ -1,9 +1,9 @@
 import fs from "fs";
 import { createRestAPIClient, mastodon } from "masto";
 import path from "path";
-import { findTootFromTweetId } from "./storage";
-import { DownloadedMedia } from "./helpers/commonTypes";
-import { getReplyingTo } from "./fxTwitterHelpers";
+import { findTootFromTweetId } from "../storage";
+import { DownloadedMedia } from "./commonTypes";
+import { getReplyingTo } from "../fxTwitterHelpers";
 
 export async function postTweetToMastodon(
   tweet: APITweet,
@@ -51,7 +51,7 @@ export async function postTweetToMastodon(
   return status;
 }
 
-export async function getJsonFromMastodon(url: string): Promise<{
+export async function getStatusAndSourceFromMastodonUrl(url: string): Promise<{
   status: mastodon.v1.Status;
   source: mastodon.v1.StatusSource;
 }> {
