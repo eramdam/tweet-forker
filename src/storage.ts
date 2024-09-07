@@ -2,28 +2,79 @@ import fs from "fs";
 let cache = new Map<string, string>();
 
 export enum Services {
+  Twitter = "twitter",
   Mastodon = "mastodon",
   Bluesky = "bsky",
   Cohost = "cohost",
 }
 
-export function saveStatus(
-  twitterId: string,
+function savePostBase(
+  source: Services,
+  id: string,
   foreignId: string,
-  service: Services,
+  foreignService: Omit<Services, typeof source>,
 ) {
-  cache.set(`${twitterId}-${service}`, foreignId);
+  cache.set(`${source}-${id}-${foreignService}`, foreignId);
+  console.log(`${source}-${id}-${foreignService}`, foreignId);
 }
 
-export function findTootFromTweetId(twitterId: string) {
-  return cache.get(`${twitterId}-${Services.Mastodon}`);
+export const savePost = {
+  fromTwitter: {
+    toCohost: (id: string, foreignId: string) => {
+      savePostBase(Services.Twitter, id, foreignId, Services.Cohost);
+    },
+    toBluesky: (id: string, foreignId: string) => {
+      savePostBase(Services.Twitter, id, foreignId, Services.Bluesky);
+    },
+    toMastodon: (id: string, foreignId: string) => {
+      savePostBase(Services.Twitter, id, foreignId, Services.Mastodon);
+    },
+  },
+  fromMastodon: {
+    toCohost: (id: string, foreignId: string) => {
+      savePostBase(Services.Mastodon, id, foreignId, Services.Cohost);
+    },
+    toBluesky: (id: string, foreignId: string) => {
+      savePostBase(Services.Mastodon, id, foreignId, Services.Bluesky);
+    },
+    toTwitter: (id: string, foreignId: string) => {
+      savePostBase(Services.Mastodon, id, foreignId, Services.Twitter);
+    },
+  },
+};
+
+function findPostFromSource(
+  source: Services,
+  sourceId: string,
+  foreignService: Omit<Services, typeof source>,
+) {
+  return cache.get(`${Services.Mastodon}-${sourceId}-${foreignService}`);
 }
-export function findBlueskyPostFromTweetId(twitterId: string) {
-  return cache.get(`${twitterId}-${Services.Bluesky}`);
-}
-export function findChostFromTweetId(twitterId: string) {
-  return cache.get(`${twitterId}-${Services.Cohost}`);
-}
+
+export const findPost = {
+  fromTwitter: {
+    toCohost: (id: string) => {
+      return findPostFromSource(Services.Twitter, id, Services.Cohost);
+    },
+    toBluesky: (id: string) => {
+      return findPostFromSource(Services.Twitter, id, Services.Bluesky);
+    },
+    toMastodon: (id: string) => {
+      return findPostFromSource(Services.Twitter, id, Services.Mastodon);
+    },
+  },
+  fromMastodon: {
+    toCohost: (id: string) => {
+      return findPostFromSource(Services.Mastodon, id, Services.Cohost);
+    },
+    toBluesky: (id: string) => {
+      return findPostFromSource(Services.Mastodon, id, Services.Bluesky);
+    },
+    toTwitter: (id: string) => {
+      return findPostFromSource(Services.Mastodon, id, Services.Twitter);
+    },
+  },
+};
 
 export function restoreFromDisk() {
   try {

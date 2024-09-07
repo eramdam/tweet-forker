@@ -2,9 +2,9 @@ import { AtUri, AtpAgent, RichText } from "@atproto/api";
 import fs from "fs";
 import mime from "mime-types";
 import path from "path";
-import { getReplyingTo } from "../fxTwitterHelpers";
+import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
-import { findBlueskyPostFromTweetId } from "../storage";
+import { getTweetReplyingTo } from "./twitter";
 
 export async function postTweetToBluesky(
   tweet: APITweet,
@@ -44,8 +44,9 @@ export async function postTweetToBluesky(
   const rt = new RichText({ text: text });
   await rt.detectFacets(agent);
 
-  const replyToId = getReplyingTo(tweet);
-  const maybeInReplyToId = replyToId && findBlueskyPostFromTweetId(replyToId);
+  const replyToId = getTweetReplyingTo(tweet);
+  const maybeInReplyToId =
+    replyToId && findPost.fromTwitter.toBluesky(replyToId);
   console.log(`[bsky] in reply to ${maybeInReplyToId}]`);
 
   const uriP = maybeInReplyToId ? new AtUri(maybeInReplyToId) : undefined;

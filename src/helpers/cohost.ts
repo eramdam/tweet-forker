@@ -1,14 +1,16 @@
 // @ts-expect-error
 import cohost from "cohost";
+import { mastodon } from "masto";
 import path from "node:path";
-import { getReplyingTo } from "../fxTwitterHelpers";
-import { findChostFromTweetId } from "../storage";
+import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
+import { getMastodonStatusInReplyTo } from "./mastodon";
+import { getTweetReplyingTo } from "./twitter";
 
 export async function postTweetToCohost(
   tweet: APITweet,
   mediaFiles: ReadonlyArray<DownloadedMedia>,
-) {
+): Promise<string | undefined> {
   const user = new cohost.User();
   await user.login(process.env.COHOST_EMAIL, process.env.COHOST_PASSWORD);
   const projects = await user.getProjects();
@@ -26,7 +28,7 @@ export async function postTweetToCohost(
   // ugly-ass hack because im too lazy to do proper markdown here
   const text = tweet.text.replaceAll("\n", "<br />");
 
-  const tweetReplyToId = getReplyingTo(tweet);
+  const tweetReplyToId = getTweetReplyingTo(tweet);
 
   const basePost = {
     postState: 0,
@@ -41,7 +43,8 @@ export async function postTweetToCohost(
       },
     ],
     shareOfPostId:
-      (tweetReplyToId && Number(findChostFromTweetId(tweetReplyToId))) ||
+      (tweetReplyToId &&
+        Number(findPost.fromTwitter.toCohost(tweetReplyToId))) ||
       undefined,
   };
 
@@ -79,5 +82,62 @@ export async function postTweetToCohost(
     ],
   });
 
-  return chost;
+  return String(chost);
+}
+
+export async function postMastodonToCohost(
+  status: mastodon.v1.Status,
+  source: mastodon.v1.StatusSource,
+  mediaFiles: ReadonlyArray<DownloadedMedia>,
+): Promise<string | undefined> {
+  const user = new cohost.User();
+  await user.login(process.env.COHOST_EMAIL, process.env.COHOST_PASSWORD);
+  const projects = await user.getProjects();
+  const projectToPostTo = projects.find(
+    (p: any) => p.handle === process.env.COHOST_PAGE,
+  );
+
+  if (!projectToPostTo) {
+    console.error(
+      new Error(`No cohost projects found for ${process.env.COHOST_PAGE}`),
+    );
+    return undefined;
+  }
+
+  const text = source.text.replaceAll("\n", "<br />");
+  const contentWarnings = source.spoilerText
+    ? source.spoilerText.split(",").map((s) => s.trim())
+    : [];
+
+  const mastodonReplyToId = getMastodonStatusInReplyTo(status);
+
+  const basePost = {
+    postState: 0,
+    headline: "",
+    adultContent: false,
+    cws: contentWarnings,
+    tags: [process.env.COHOST_TAG].filter(Boolean),
+    blocks: [
+      {
+        type: "markdown",
+        markdown: { content: text },
+      },
+    ],
+    shareOfPostId:
+      (mastodonReplyToId &&
+        Number(findPost.fromMastodon.toCohost(mastodonReplyToId))) ||
+      undefined,
+  };
+
+  console.log({ mastodonReplyToId, basePost });
+
+  const draftId = await cohost.Post.create(projectToPostTo, basePost);
+
+  const chost = await cohost.Post.update(projectToPostTo, draftId, {
+    ...basePost,
+    postState: 1,
+    blocks: [...basePost.blocks],
+  });
+
+  return String(chost);
 }

@@ -5,6 +5,8 @@ import {
   MastodonStatusNotFoundError,
 } from "../helpers/mastodon";
 import { mastodon } from "masto";
+import { postMastodonToCohost } from "../helpers/cohost";
+import { savePost } from "../storage";
 
 export function mountMastodonRoutes(app: Express) {
   app.get("/fromMastodon", async (req, res) => {
@@ -12,14 +14,13 @@ export function mountMastodonRoutes(app: Express) {
       const { url, services } = parseQuery(req);
 
       const json = await getStatusAndSourceFromMastodonUrl(url.toString());
-      console.log(json);
 
       return handleMastodonPost({
         res,
         ...json,
         postToTwitter: services.includes("twitter"),
         postToBluesky: services.includes("bsky"),
-        postToCohost: services.includes("cohost"),
+        postToCohost: services.includes("cohost") || true,
       });
     } catch (e) {
       console.error(e);
@@ -39,4 +40,20 @@ async function handleMastodonPost(options: {
   postToTwitter: boolean;
   postToBluesky: boolean;
   postToCohost: boolean;
-}) {}
+}) {
+  const { res, status, source, postToTwitter, postToBluesky, postToCohost } =
+    options;
+  if (postToCohost) {
+    try {
+      const chost = await postMastodonToCohost(status, source, []);
+      if (chost) {
+        savePost.fromMastodon.toCohost(status.id, chost);
+        console.log("Chost!");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  return res.sendStatus(200);
+}

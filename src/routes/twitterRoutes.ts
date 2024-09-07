@@ -6,7 +6,7 @@ import { postTweetToCohost } from "../helpers/cohost";
 import { postTweetToMastodon } from "../helpers/mastodon";
 import { downloadTwitterMedia } from "../helpers/twitter";
 import { expandUrlsInTweetText } from "../redirects";
-import { Services, saveStatus } from "../storage";
+import { savePost } from "../storage";
 
 import { type Express, type Response } from "express";
 import { baseRequestOptions } from "../server";
@@ -72,7 +72,7 @@ export function mountTwitterRoutes(app: Express) {
             console.log("Posting to Mastodon...");
             const toot = await postTweetToMastodon(fxStatus.tweet, mediaFiles);
             const tootId = toot.id;
-            saveStatus(tweetId, tootId, Services.Mastodon);
+            savePost.fromTwitter.toMastodon(tweetId, tootId);
             console.log("Toot!");
           },
         postToBluesky &&
@@ -83,14 +83,14 @@ export function mountTwitterRoutes(app: Express) {
               mediaFiles,
             );
             const blueskyPostId = blueskyPost.uri;
-            saveStatus(tweetId, blueskyPostId, Services.Bluesky);
+            savePost.fromTwitter.toBluesky(tweetId, blueskyPostId);
             console.log("Post!");
           },
         postToCohost &&
           async function () {
             console.log("Posting to cohost...");
             const chost = await postTweetToCohost(fxStatus.tweet, mediaFiles);
-            saveStatus(tweetId, chost, Services.Cohost);
+            savePost.fromTwitter.toCohost(tweetId, chost);
             console.log("Chost!");
           },
       ]);

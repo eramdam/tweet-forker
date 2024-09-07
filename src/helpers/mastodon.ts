@@ -1,9 +1,11 @@
 import fs from "fs";
 import { createRestAPIClient, mastodon } from "masto";
 import path from "path";
-import { findTootFromTweetId } from "../storage";
+import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
-import { getReplyingTo } from "../fxTwitterHelpers";
+import { getTweetReplyingTo } from "./twitter";
+
+export class MastodonStatusNotFoundError extends Error {}
 
 export async function postTweetToMastodon(
   tweet: APITweet,
@@ -38,8 +40,9 @@ export async function postTweetToMastodon(
     }),
   );
 
-  const inReplyTo = getReplyingTo(tweet);
-  const maybeInReplyToId = inReplyTo && findTootFromTweetId(inReplyTo);
+  const inReplyTo = getTweetReplyingTo(tweet);
+  const maybeInReplyToId =
+    inReplyTo && findPost.fromTwitter.toMastodon(inReplyTo);
 
   const status = await masto.v1.statuses.create({
     status: text,
@@ -78,4 +81,6 @@ export async function getStatusAndSourceFromMastodonUrl(url: string): Promise<{
   return { status, source };
 }
 
-export class MastodonStatusNotFoundError extends Error {}
+export function getMastodonStatusInReplyTo(status: mastodon.v1.Status) {
+  return status.inReplyToId;
+}

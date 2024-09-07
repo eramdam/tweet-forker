@@ -24,3 +24,9 @@ export async function downloadTwitterMedia(tweet: APITweet) {
     }),
   );
 }
+export function getTweetReplyingTo(tweet: APITweet) {
+  if (tweet.replying_to_status) {
+    return tweet.replying_to_status;
+  }
+  return tweet.replying_to_status ?? tweet.replying_to?.post ?? null;
+}
