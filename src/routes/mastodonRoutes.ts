@@ -11,6 +11,7 @@ import { postMastodonToCohost } from "../helpers/cohost";
 import { savePost } from "../storage";
 import { compact } from "lodash";
 import { postMastodonToBluesky } from "../helpers/bsky";
+import { postMastodonToTwitter } from "../helpers/twitter";
 
 export function mountMastodonRoutes(app: Express) {
   app.get("/fromMastodon", async (req, res) => {
@@ -23,7 +24,7 @@ export function mountMastodonRoutes(app: Express) {
         res,
         ...json,
         postToTwitter: services.includes("twitter"),
-        postToBluesky: services.includes("bsky") || true,
+        postToBluesky: services.includes("bsky"),
         postToCohost: services.includes("cohost"),
       });
     } catch (e) {
@@ -69,6 +70,19 @@ async function handleMastodonPost(options: {
         if (blueskyPost) {
           savePost.fromMastodon.toBluesky(status.id, blueskyPost.uri);
           console.log("Bluesky!");
+        }
+      },
+    postToTwitter &&
+      async function () {
+        const twitterPost = await postMastodonToTwitter(
+          status,
+          source,
+          mediaFiles,
+        );
+
+        if (twitterPost) {
+          savePost.fromMastodon.toTwitter(status.id, twitterPost.data.id);
+          console.log("Twitter!");
         }
       },
   ]);
