@@ -105,7 +105,7 @@ export async function postMastodonToCohost(
     return undefined;
   }
 
-  const text = source.text.replaceAll("\n", "<br />");
+  const text = source.text;
   const contentWarnings = source.spoilerText
     ? source.spoilerText.split(",").map((s) => s.trim())
     : [];
@@ -129,8 +129,6 @@ export async function postMastodonToCohost(
         Number(findPost.fromMastodon.toCohost(mastodonReplyToId))) ||
       undefined,
   };
-
-  console.log({ mastodonReplyToId, basePost });
 
   const draftId = await cohost.Post.create(projectToPostTo, basePost);
   const attachmentsData = await Promise.all(
