@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { type Express, type Response } from "express";
 import { parseQuery } from "./routeHelpers";
 import {
@@ -8,6 +9,8 @@ import {
 import { mastodon } from "masto";
 import { postMastodonToCohost } from "../helpers/cohost";
 import { savePost } from "../storage";
+import { compact } from "lodash";
+import { postMastodonToBluesky } from "../helpers/bsky";
 
 export function mountMastodonRoutes(app: Express) {
   app.get("/fromMastodon", async (req, res) => {
@@ -20,8 +23,8 @@ export function mountMastodonRoutes(app: Express) {
         res,
         ...json,
         postToTwitter: services.includes("twitter"),
-        postToBluesky: services.includes("bsky"),
-        postToCohost: services.includes("cohost") || true,
+        postToBluesky: services.includes("bsky") || true,
+        postToCohost: services.includes("cohost"),
       });
     } catch (e) {
       console.error(e);
@@ -47,17 +50,34 @@ async function handleMastodonPost(options: {
 
   const mediaFiles = await downloadMastodonMedia(status);
 
-  if (postToCohost) {
-    try {
-      const chost = await postMastodonToCohost(status, source, mediaFiles);
-      if (chost) {
-        savePost.fromMastodon.toCohost(status.id, chost);
-        console.log("Chost!");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  const postingPromises = compact([
+    postToCohost &&
+      async function () {
+        const chost = await postMastodonToCohost(status, source, mediaFiles);
+        if (chost) {
+          savePost.fromMastodon.toCohost(status.id, chost);
+          console.log("Chost!");
+        }
+      },
+    postToBluesky &&
+      async function () {
+        const blueskyPost = await postMastodonToBluesky(
+          status,
+          source,
+          mediaFiles,
+        );
+        if (blueskyPost) {
+          savePost.fromMastodon.toBluesky(status.id, blueskyPost.uri);
+          console.log("Bluesky!");
+        }
+      },
+  ]);
+
+  await Promise.all(postingPromises.map((p) => p()));
+
+  mediaFiles.forEach((file) => {
+    fs.unlinkSync(file.filename);
+  });
 
   return res.sendStatus(200);
 }

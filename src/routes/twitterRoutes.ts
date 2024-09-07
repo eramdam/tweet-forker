@@ -90,8 +90,10 @@ export function mountTwitterRoutes(app: Express) {
           async function () {
             console.log("Posting to cohost...");
             const chost = await postTweetToCohost(fxStatus.tweet, mediaFiles);
-            savePost.fromTwitter.toCohost(tweetId, chost);
-            console.log("Chost!");
+            if (chost) {
+              savePost.fromTwitter.toCohost(tweetId, chost);
+              console.log("Chost!");
+            }
           },
       ]);
 
