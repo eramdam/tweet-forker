@@ -18,7 +18,7 @@ export function saveStatus(
 export function findTootFromTweetId(twitterId: string) {
   return cache.get(`${twitterId}-${Services.Mastodon}`);
 }
-export function findSkeetFromTweetId(twitterId: string) {
+export function findBlueskyPostFromTweetId(twitterId: string) {
   return cache.get(`${twitterId}-${Services.Bluesky}`);
 }
 export function findChostFromTweetId(twitterId: string) {
