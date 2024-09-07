@@ -108,7 +108,8 @@ export async function postMastodonToBluesky(
   const agent = new AtpAgent({ service: "https://staging.bsky.social" });
 
   console.log("[bsky] login");
-  const text = source.text;
+  const isStatusTooLong = source.text.length > 300;
+  const text = isStatusTooLong ? source.text.slice(0, 299) + "…" : source.text;
   await agent.login({
     identifier: process.env.BSKY_ID || "",
     password: process.env.BSKY_PASSWORD || "",
@@ -203,6 +204,20 @@ export async function postMastodonToBluesky(
     }
   }
 
+  if (isStatusTooLong) {
+    const embedMeta = await makeEmbedFromMastodonUrl(status.uri);
+
+    embed = {
+      $type: "app.bsky.embed.external",
+      external: {
+        description: embedMeta.description,
+        title: embedMeta.title,
+        descriptionHtml: embedMeta.description || "",
+        uri: embedMeta.url,
+      },
+    };
+  }
+
   const res = await agent.post({
     $type: "app.bsky.feed.post",
     text: rt.text,
@@ -218,4 +233,12 @@ export async function postMastodonToBluesky(
   });
 
   return res;
+}
+
+async function makeEmbedFromMastodonUrl(link: string) {
+  const url = new URL(`https://cardyb.bsky.app/v1/extract`);
+  url.searchParams.set("url", link);
+
+  const res = await fetch(url.toString());
+  return await res.json();
 }
