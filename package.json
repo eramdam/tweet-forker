@@ -15,12 +15,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@atproto/api": "^0.13.1",
+    "@atproto/api": "^0.13.6",
     "@types/express": "^4.17.21",
     "@types/lodash": "^4.17.7",
     "@types/luxon": "^3.4.2",
     "@types/mime-types": "^2.1.4",
-    "@types/node": "^22.4.0",
+    "@types/node": "^22.5.4",
     "cohost": "^0.0.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -30,8 +30,8 @@
     "masto": "^6.8.0",
     "mime-types": "^2.1.35",
     "prettier": "^3.3.3",
-    "tsx": "^4.17.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.5.4",
-    "undici": "^6.19.7"
+    "undici": "^6.19.8"
   }
 }

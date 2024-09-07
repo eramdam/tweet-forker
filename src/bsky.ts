@@ -1,4 +1,4 @@
-import { AtUri, BskyAgent, RichText } from "@atproto/api";
+import { AtUri, AtpAgent, RichText } from "@atproto/api";
 import fs from "fs";
 import mime from "mime-types";
 import path from "path";
@@ -10,7 +10,7 @@ export async function postTweetToBluesky(
   tweet: APITweet,
   mediaFiles: ReadonlyArray<DownloadedMedia>,
 ) {
-  const agent = new BskyAgent({ service: "https://staging.bsky.social" });
+  const agent = new AtpAgent({ service: "https://staging.bsky.social" });
 
   console.log("[bsky] login");
   const text = tweet.text + (tweet.quote?.url ? ` ${tweet.quote?.url}` : ``);
