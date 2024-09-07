@@ -106,7 +106,7 @@ export function mountTwitterRoutes(app: Express) {
       return res.sendStatus(200);
     } catch (e) {
       console.error(e);
-      return res.sendStatus(404);
+      return res.sendStatus(500);
     }
   }
 }

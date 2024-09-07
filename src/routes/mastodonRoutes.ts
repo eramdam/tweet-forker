@@ -49,49 +49,54 @@ async function handleMastodonPost(options: {
   const { res, status, source, postToTwitter, postToBluesky, postToCohost } =
     options;
 
-  const mediaFiles = await downloadMastodonMedia(status);
+  try {
+    const mediaFiles = await downloadMastodonMedia(status);
 
-  const postingPromises = compact([
-    postToCohost &&
-      async function () {
-        const chost = await postMastodonToCohost(status, source, mediaFiles);
-        if (chost) {
-          savePost.fromMastodon.toCohost(status.id, chost);
-          console.log("Chost!");
-        }
-      },
-    postToBluesky &&
-      async function () {
-        const blueskyPost = await postMastodonToBluesky(
-          status,
-          source,
-          mediaFiles,
-        );
-        if (blueskyPost) {
-          savePost.fromMastodon.toBluesky(status.id, blueskyPost.uri);
-          console.log("Bluesky!");
-        }
-      },
-    postToTwitter &&
-      async function () {
-        const twitterPost = await postMastodonToTwitter(
-          status,
-          source,
-          mediaFiles,
-        );
+    const postingPromises = compact([
+      postToCohost &&
+        async function () {
+          const chost = await postMastodonToCohost(status, source, mediaFiles);
+          if (chost) {
+            savePost.fromMastodon.toCohost(status.id, chost);
+            console.log("Chost!");
+          }
+        },
+      postToBluesky &&
+        async function () {
+          const blueskyPost = await postMastodonToBluesky(
+            status,
+            source,
+            mediaFiles,
+          );
+          if (blueskyPost) {
+            savePost.fromMastodon.toBluesky(status.id, blueskyPost.uri);
+            console.log("Bluesky!");
+          }
+        },
+      postToTwitter &&
+        async function () {
+          const twitterPost = await postMastodonToTwitter(
+            status,
+            source,
+            mediaFiles,
+          );
 
-        if (twitterPost) {
-          savePost.fromMastodon.toTwitter(status.id, twitterPost.data.id);
-          console.log("Twitter!");
-        }
-      },
-  ]);
+          if (twitterPost) {
+            savePost.fromMastodon.toTwitter(status.id, twitterPost.data.id);
+            console.log("Twitter!");
+          }
+        },
+    ]);
 
-  await Promise.all(postingPromises.map((p) => p()));
+    await Promise.all(postingPromises.map((p) => p()));
 
-  mediaFiles.forEach((file) => {
-    fs.unlinkSync(file.filename);
-  });
+    mediaFiles.forEach((file) => {
+      fs.unlinkSync(file.filename);
+    });
 
-  return res.sendStatus(200);
+    return res.sendStatus(200);
+  } catch (e) {
+    console.error(e);
+    return res.sendStatus(500);
+  }
 }
