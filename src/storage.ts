@@ -15,7 +15,7 @@ function savePostBase(
   foreignService: Omit<Services, typeof source>,
 ) {
   cache.set(`${source}-${id}-${foreignService}`, foreignId);
-  console.log(`${source}-${id}-${foreignService}`, foreignId);
+  writeToDisk();
 }
 
 export const savePost = {
@@ -81,7 +81,7 @@ export function restoreFromDisk() {
     const raw = fs.readFileSync("./cache.json", { encoding: "utf-8" });
     cache = new Map<string, string>(JSON.parse(raw));
   } catch (e) {
-    //
+    cache = new Map<string, string>();
   }
 }
 

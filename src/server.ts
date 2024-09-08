@@ -3,7 +3,7 @@ import fs from "node:fs";
 import express from "express";
 import { setupCleanup } from "./cleanup";
 import { mountTwitterRoutes } from "./routes/twitterRoutes";
-import { restoreFromDisk, writeToDisk } from "./storage";
+import { restoreFromDisk, savePost, writeToDisk } from "./storage";
 import { mountMastodonRoutes } from "./routes/mastodonRoutes";
 
 dotenv.config();
@@ -42,10 +42,6 @@ mountMastodonRoutes(app);
 
 app.all("*", (req, res) => {
   res.sendStatus(404);
-});
-
-setupCleanup(() => {
-  writeToDisk();
 });
 
 app.listen(port, () => {
