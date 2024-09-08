@@ -11,3 +11,4 @@
     - If the Mastodon post is too long, it will be posted as a tweet with a link to the original post
     - If the Mastodon post has a content warning, it will be posted as a tweet with a link to the original post
 - media files are now stored in the `media` folder
+- The `docker` npm script has been removed. The installation of dependencies and building of the project is now in the setup of the Docker container.
