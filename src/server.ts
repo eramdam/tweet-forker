@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+import fs from "node:fs";
 import express from "express";
 import { setupCleanup } from "./cleanup";
 import { mountTwitterRoutes } from "./routes/twitterRoutes";
@@ -9,6 +10,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
 const isDev = process.env.NODE_ENV !== "production";
+
+if (!fs.existsSync("media")) {
+  console.log("Creating media folder");
+  fs.mkdirSync("media");
+}
 
 restoreFromDisk();
 
