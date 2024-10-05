@@ -1,17 +1,16 @@
-import fs from "node:fs";
 import { type Express, type Response } from "express";
-import { parseQuery } from "./routeHelpers";
+import { compact } from "lodash";
+import { mastodon } from "masto";
+import fs from "node:fs";
+import { postMastodonToBluesky } from "../helpers/bsky";
 import {
   downloadMastodonMedia,
   getStatusAndSourceFromMastodonUrl,
   MastodonStatusNotFoundError,
 } from "../helpers/mastodon";
-import { mastodon } from "masto";
-import { postMastodonToCohost } from "../helpers/cohost";
-import { savePost } from "../storage";
-import { compact } from "lodash";
-import { postMastodonToBluesky } from "../helpers/bsky";
 import { postMastodonToTwitter } from "../helpers/twitter";
+import { savePost } from "../storage";
+import { parseQuery } from "./routeHelpers";
 
 export function mountMastodonRoutes(app: Express) {
   app.get("/fromMastodon", async (req, res) => {
@@ -25,7 +24,6 @@ export function mountMastodonRoutes(app: Express) {
         ...json,
         postToTwitter: services.includes("twitter"),
         postToBluesky: services.includes("bsky"),
-        postToCohost: services.includes("cohost"),
       });
     } catch (e) {
       console.error(e);
@@ -44,23 +42,13 @@ async function handleMastodonPost(options: {
   source: mastodon.v1.StatusSource;
   postToTwitter: boolean;
   postToBluesky: boolean;
-  postToCohost: boolean;
 }) {
-  const { res, status, source, postToTwitter, postToBluesky, postToCohost } =
-    options;
+  const { res, status, source, postToTwitter, postToBluesky } = options;
 
   try {
     const mediaFiles = await downloadMastodonMedia(status);
 
     const postingPromises = compact([
-      postToCohost &&
-        async function () {
-          const chost = await postMastodonToCohost(status, source, mediaFiles);
-          if (chost) {
-            savePost.fromMastodon.toCohost(status.id, chost);
-            console.log("Chost!");
-          }
-        },
       postToBluesky &&
         async function () {
           const blueskyPost = await postMastodonToBluesky(
