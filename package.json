@@ -8,8 +8,7 @@
     "typecheck": "tsc --noEmit -p .",
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
-    "serve": "forever stop 'tweet-forker'; forever --uid='tweet-forker' --append start src/server.js",
-    "docker": "npm ci && npm run build && docker compose up -d"
+    "serve": "forever stop 'tweet-forker'; forever --uid='tweet-forker' --append start src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -30,7 +29,9 @@
     "masto": "^6.8.0",
     "mime-types": "^2.1.35",
     "prettier": "^3.3.3",
+    "sharp": "^0.33.5",
     "tsx": "^4.19.0",
+    "twitter-api-v2": "^1.17.2",
     "typescript": "^5.5.4",
     "undici": "^6.19.8"
   }
