@@ -29,6 +29,7 @@
     "masto": "^6.8.0",
     "mime-types": "^2.1.35",
     "prettier": "^3.3.3",
+    "sharp": "^0.33.5",
     "tsx": "^4.19.0",
     "twitter-api-v2": "^1.17.2",
     "typescript": "^5.5.4",

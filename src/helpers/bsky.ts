@@ -14,6 +14,9 @@ import { getTweetReplyingTo } from "./twitter";
 import { mastodon } from "masto";
 import { getMastodonStatusInReplyTo } from "./mastodon";
 import { stream } from "undici";
+import sharp from "sharp";
+
+const BSKY_MAX_BLOB_SIZE_IN_BYTES = 976_560;
 
 export async function postTweetToBluesky(
   tweet: APITweet,
@@ -123,12 +126,22 @@ export async function postMastodonToBluesky(
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
         async (resolve) => {
           console.log(`[bsky] uploading ${photo.filename}`);
-          const response = await agent.uploadBlob(
-            fs.readFileSync(makeMediaFilepath(photo.filename)),
-            {
-              encoding: mime.lookup(makeMediaFilepath(photo.filename)) || "",
-            },
-          );
+          const file = fs.readFileSync(makeMediaFilepath(photo.filename));
+          let fileArr = new Uint8Array(file);
+
+          if (fileArr.length > BSKY_MAX_BLOB_SIZE_IN_BYTES) {
+            console.log("Compressing...", photo.filename);
+            const compressedResult = await sharp(fileArr)
+              .resize({ height: 2000 })
+              .jpeg({ quality: 80 })
+              .toBuffer();
+
+            fileArr = new Uint8Array(compressedResult.buffer);
+          }
+
+          const response = await agent.uploadBlob(fileArr, {
+            encoding: mime.lookup(makeMediaFilepath(photo.filename)) || "",
+          });
 
           resolve(response);
         },
