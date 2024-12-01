@@ -121,6 +121,9 @@ export async function postMastodonToBluesky(
   if (mediaFiles.length > 0) {
     console.log("[bsky] upload images");
   }
+  const imageMetadata = await Promise.all(
+    mediaFiles.slice(0, 4).map((t) => sharp(t.filename).metadata()),
+  );
   const imageRecords = await Promise.all(
     mediaFiles.slice(0, 4).map((photo) => {
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
@@ -183,9 +186,13 @@ export async function postMastodonToBluesky(
         return {
           image: r.data.blob,
           alt: mediaFiles[index]?.altText || "",
+          aspectRatio: {
+            width: imageMetadata[index].width,
+            height: imageMetadata[index].height,
+          },
         };
       }),
-    };
+    } as AppBskyEmbedImages.Main;
   }
 
   if (status.card) {
