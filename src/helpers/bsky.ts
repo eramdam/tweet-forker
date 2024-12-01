@@ -179,22 +179,6 @@ export async function postMastodonToBluesky(
   let embed: AppBskyEmbedImages.Main | AppBskyEmbedExternal.Main | undefined =
     undefined;
 
-  if (imageRecords.length) {
-    embed = {
-      $type: "app.bsky.embed.images",
-      images: imageRecords.map((r, index) => {
-        return {
-          image: r.data.blob,
-          alt: mediaFiles[index]?.altText || "",
-          aspectRatio: {
-            width: imageMetadata[index].width,
-            height: imageMetadata[index].height,
-          },
-        };
-      }),
-    } as AppBskyEmbedImages.Main;
-  }
-
   if (status.card) {
     embed = {
       $type: "app.bsky.embed.external",
@@ -222,6 +206,22 @@ export async function postMastodonToBluesky(
 
       fs.unlinkSync(makeMediaFilepath(status.card!.image!));
     }
+  }
+
+  if (imageRecords.length) {
+    embed = {
+      $type: "app.bsky.embed.images",
+      images: imageRecords.map((r, index) => {
+        return {
+          image: r.data.blob,
+          alt: mediaFiles[index]?.altText || "",
+          aspectRatio: {
+            width: imageMetadata[index].width,
+            height: imageMetadata[index].height,
+          },
+        };
+      }),
+    } as AppBskyEmbedImages.Main;
   }
 
   if (imageRecords.length) {
