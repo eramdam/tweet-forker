@@ -224,18 +224,6 @@ export async function postMastodonToBluesky(
     } as AppBskyEmbedImages.Main;
   }
 
-  if (imageRecords.length) {
-    embed = {
-      $type: "app.bsky.embed.images",
-      images: imageRecords.map((r, index) => {
-        return {
-          image: r.data.blob,
-          alt: mediaFiles[index]?.altText || "",
-        };
-      }),
-    };
-  }
-
   if (isStatusTooLong) {
     const embedMeta = await makeEmbedFromMastodonUrl(status.uri);
 
