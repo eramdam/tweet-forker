@@ -136,7 +136,7 @@ export async function postMastodonToBluesky(
             console.log("Compressing...", photo.filename);
             const compressedResult = await sharp(fileArr)
               .resize({ height: 2000 })
-              .jpeg({ quality: 80 })
+              .jpeg({ quality: 75 })
               .toBuffer();
 
             fileArr = new Uint8Array(compressedResult.buffer);
