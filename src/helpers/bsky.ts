@@ -242,6 +242,7 @@ export async function postMastodonToBluesky(
     $type: "app.bsky.feed.post",
     text: rt.text,
     facets: rt.facets,
+    langs: status.language ? [status.language] : ["en-US"],
     reply:
       parentPost && parentRef
         ? {
