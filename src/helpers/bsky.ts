@@ -1,20 +1,26 @@
 import {
   AppBskyEmbedExternal,
   AppBskyEmbedImages,
+  AppBskyEmbedVideo,
   AtUri,
   AtpAgent,
+  AppBskyVideoNS,
   RichText,
+  BlobRef,
+  AppBskyVideoDefs,
 } from "@atproto/api";
 import fs from "fs";
 import mime from "mime-types";
 import { findPost } from "../storage";
 import { DownloadedMedia } from "./commonTypes";
-import { makeMediaFilepath } from "./media";
+import { getVideoDimensions, getVideoSize, makeMediaFilepath } from "./media";
 import { getTweetReplyingTo } from "./twitter";
 import { mastodon } from "masto";
 import { getMastodonStatusInReplyTo } from "./mastodon";
 import { stream } from "undici";
 import sharp from "sharp";
+import { JobStatus } from "@atproto/api/dist/client/types/app/bsky/video/defs";
+import { Readable } from "node:stream";
 
 const BSKY_MAX_BLOB_SIZE_IN_BYTES = 976_560;
 
@@ -122,24 +128,35 @@ export async function postMastodonToBluesky(
     console.log("[bsky] upload images");
   }
   const imageMetadata = await Promise.all(
-    mediaFiles.slice(0, 4).map((t) => sharp(t.filename).metadata()),
+    mediaFiles
+      .filter((f) => {
+        return f.type === "image";
+      })
+      .slice(0, 4)
+      .map((t) => sharp(t.filename).metadata()),
   );
+  const imageFiles = mediaFiles.filter((f) => f.type === "image").slice(0, 4);
   const imageRecords = await Promise.all(
-    mediaFiles.slice(0, 4).map((photo) => {
+    imageFiles.slice(0, 4).map((photo) => {
       return new Promise<Awaited<ReturnType<typeof agent.uploadBlob>>>(
         async (resolve) => {
           console.log(`[bsky] uploading ${photo.filename}`);
           const file = fs.readFileSync(makeMediaFilepath(photo.filename));
           let fileArr = new Uint8Array(file);
 
-          if (fileArr.length > BSKY_MAX_BLOB_SIZE_IN_BYTES) {
-            console.log("Compressing...", photo.filename);
-            const compressedResult = await sharp(fileArr)
-              .resize({ height: 2000 })
-              .jpeg({ quality: 75 })
-              .toBuffer();
+          if (
+            !photo.filename.endsWith("mp4") &&
+            !photo.filename.endsWith("gif")
+          ) {
+            if (fileArr.length > BSKY_MAX_BLOB_SIZE_IN_BYTES) {
+              console.log("Compressing...", photo.filename);
+              const compressedResult = await sharp(fileArr)
+                .resize({ height: 2000 })
+                .jpeg({ quality: 75 })
+                .toBuffer();
 
-            fileArr = new Uint8Array(compressedResult.buffer);
+              fileArr = new Uint8Array(compressedResult.buffer);
+            }
           }
 
           const response = await agent.uploadBlob(fileArr, {
@@ -151,6 +168,67 @@ export async function postMastodonToBluesky(
       );
     }),
   );
+  const videoFiles = mediaFiles.filter((f) => f.type === "video").slice(0, 1);
+  const videoAgent = new AtpAgent({ service: "https://video.bsky.app" });
+  const { data: serviceAuth } = await agent.com.atproto.server.getServiceAuth({
+    aud: `did:web:${agent.dispatchUrl.host}`,
+    lxm: "com.atproto.repo.uploadBlob",
+    exp: Date.now() / 1000 + 60 * 30, // 30 minutes
+  });
+  const token = serviceAuth.token;
+  const videoRecords = await Promise.all(
+    videoFiles.map((video) => {
+      return new Promise<Awaited<BlobRef>>(async (resolve, reject) => {
+        const uploadUrl = new URL(
+          "https://video.bsky.app/xrpc/app.bsky.video.uploadVideo",
+        );
+        uploadUrl.searchParams.append("did", agent.session!.did);
+        uploadUrl.searchParams.append("name", video.filename.split("/").pop()!);
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "POST",
+          duplex: "half",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "video/mp4",
+            "Content-Length": String(await getVideoSize(video.filename)),
+          },
+          body: Readable.toWeb(
+            fs.createReadStream(video.filename),
+          ) as ReadableStream,
+        });
+
+        const jobStatus =
+          (await uploadResponse.json()) as AppBskyVideoDefs.JobStatus;
+        console.log("JobId:", jobStatus.jobId);
+        let blob: BlobRef | undefined = jobStatus.blob;
+
+        while (!blob) {
+          const { data: status } = await videoAgent.app.bsky.video.getJobStatus(
+            {
+              jobId: jobStatus.jobId,
+            },
+          );
+          console.log(
+            "Status:",
+            status.jobStatus.state,
+            status.jobStatus.progress || "",
+          );
+          if (
+            status.jobStatus.blob &&
+            status.jobStatus.state === "JOB_STATE_COMPLETED"
+          ) {
+            blob = status.jobStatus.blob;
+          }
+        }
+
+        resolve(blob);
+      });
+    }),
+  );
+  const videoMetadata = videoFiles[0]
+    ? await getVideoDimensions(videoFiles[0].filename)
+    : undefined;
 
   console.log("[bsky] text formatting");
   const rt = new RichText({ text: text });
@@ -176,8 +254,11 @@ export async function postMastodonToBluesky(
       }
     : undefined;
 
-  let embed: AppBskyEmbedImages.Main | AppBskyEmbedExternal.Main | undefined =
-    undefined;
+  let embed:
+    | AppBskyEmbedImages.Main
+    | AppBskyEmbedExternal.Main
+    | AppBskyEmbedVideo.Main
+    | undefined = undefined;
 
   if (status.card) {
     embed = {
@@ -214,7 +295,7 @@ export async function postMastodonToBluesky(
       images: imageRecords.map((r, index) => {
         return {
           image: r.data.blob,
-          alt: mediaFiles[index]?.altText || "",
+          alt: imageFiles[index]?.altText || "",
           aspectRatio: {
             width: imageMetadata[index].width,
             height: imageMetadata[index].height,
@@ -222,6 +303,20 @@ export async function postMastodonToBluesky(
         };
       }),
     } as AppBskyEmbedImages.Main;
+  }
+
+  if (videoRecords.length) {
+    embed = {
+      $type: "app.bsky.embed.video",
+      video: videoRecords[0],
+      aspectRatio:
+        (videoMetadata && {
+          width: videoMetadata.width,
+          height: videoMetadata.height,
+        }) ||
+        undefined,
+    };
+    console.log(embed);
   }
 
   if (isStatusTooLong) {
@@ -262,4 +357,22 @@ async function makeEmbedFromMastodonUrl(link: string) {
 
   const res = await fetch(url.toString());
   return await res.json();
+}
+
+function getHostnameFromUrl(url: string | URL): string | null {
+  let urlp;
+  try {
+    urlp = new URL(url);
+  } catch (e) {
+    return null;
+  }
+  return urlp.hostname;
+}
+
+function getServiceAuthAudFromUrl(url: string | URL): string | null {
+  const hostname = getHostnameFromUrl(url);
+  if (!hostname) {
+    return null;
+  }
+  return `did:web:${hostname}`;
 }

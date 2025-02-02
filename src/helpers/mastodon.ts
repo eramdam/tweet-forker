@@ -92,7 +92,7 @@ export async function downloadMastodonMedia(
   const media = await Promise.all(
     status.mediaAttachments
       .filter((a) => {
-        return a.type.startsWith("image") || a.type.startsWith("audio");
+        return a.type.startsWith("image") || a.type.startsWith("video");
       })
       .filter((a): a is mastodon.v1.MediaAttachment & { url: string } => {
         return Boolean(a.url);
@@ -107,6 +107,7 @@ export async function downloadMastodonMedia(
           resolve({
             filename: makeMediaFilepath(attachment.url),
             altText: attachment.description ?? "",
+            type: attachment.type,
           });
         });
       }),
