@@ -185,22 +185,20 @@ export async function postMastodonToBluesky(
       external: {
         description: status.card.description,
         title: status.card.title,
-        descriptionHtml: status.card.description || "",
         uri: status.card.url,
       },
-    };
+    } satisfies AppBskyEmbedExternal.Main;
 
     if (status.card.image) {
       await stream(status.card.image, { method: "GET" }, () =>
         fs.createWriteStream(makeMediaFilepath(status.card!.image!)),
       );
 
-      const cardImageRecord = await agent.uploadBlob(
-        fs.readFileSync(makeMediaFilepath(status.card!.image!)),
-        {
-          encoding: mime.lookup(makeMediaFilepath(status.card.image!)) || "",
-        },
-      );
+      const file = fs.readFileSync(makeMediaFilepath(status.card!.image!));
+      const fileArr = new Uint8Array(file);
+      const cardImageRecord = await agent.uploadBlob(fileArr, {
+        encoding: mime.lookup(makeMediaFilepath(status.card.image!)) || "",
+      });
 
       embed.external.thumb = cardImageRecord.data.blob;
 
@@ -216,12 +214,12 @@ export async function postMastodonToBluesky(
           image: r.data.blob,
           alt: mediaFiles[index]?.altText || "",
           aspectRatio: {
-            width: imageMetadata[index].width,
-            height: imageMetadata[index].height,
+            width: imageMetadata[index].width || 1,
+            height: imageMetadata[index].height || 1,
           },
         };
       }),
-    } as AppBskyEmbedImages.Main;
+    } satisfies AppBskyEmbedImages.Main;
   }
 
   if (isStatusTooLong) {
@@ -232,10 +230,9 @@ export async function postMastodonToBluesky(
       external: {
         description: embedMeta.description,
         title: embedMeta.title,
-        descriptionHtml: embedMeta.description || "",
         uri: embedMeta.url,
       },
-    };
+    } as const;
   }
 
   const res = await agent.post({
@@ -250,8 +247,25 @@ export async function postMastodonToBluesky(
             parent: parentRef,
           }
         : undefined,
-    embed,
+    // @ts-expect-error
+    embed: embed?.$type ? embed : undefined,
   });
+
+  const { rkey } = new AtUri(res.uri);
+
+  if (agent.session?.did) {
+    await agent.com.atproto.repo.createRecord({
+      repo: agent.session?.did,
+      collection: "app.bsky.feed.threadgate",
+      rkey,
+      record: {
+        $type: "app.bsky.feed.threadgate",
+        post: res.uri,
+        allow: [{ $type: "app.bsky.feed.threadgate#followerRule" }],
+        createdAt: new Date().toISOString(),
+      },
+    });
+  }
 
   return res;
 }
