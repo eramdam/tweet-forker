@@ -103,20 +103,24 @@ export async function postTweetToBluesky(
   return res;
 }
 
+const agent = new AtpAgent({ service: "https://staging.bsky.social" });
+let isBskyLoggedIn = false;
+
 export async function postMastodonToBluesky(
   status: mastodon.v1.Status,
   source: mastodon.v1.StatusSource,
   mediaFiles: ReadonlyArray<DownloadedMedia>,
 ) {
-  const agent = new AtpAgent({ service: "https://staging.bsky.social" });
-
   console.log("[bsky] login");
   const isStatusTooLong = source.text.length > 300;
   const text = isStatusTooLong ? source.text.slice(0, 299) + "…" : source.text;
-  await agent.login({
-    identifier: process.env.BSKY_ID || "",
-    password: process.env.BSKY_PASSWORD || "",
-  });
+  if (!isBskyLoggedIn) {
+    await agent.login({
+      identifier: process.env.BSKY_ID || "",
+      password: process.env.BSKY_PASSWORD || "",
+    });
+    isBskyLoggedIn = true;
+  }
 
   if (mediaFiles.length > 0) {
     console.log("[bsky] upload images");
@@ -266,8 +270,6 @@ export async function postMastodonToBluesky(
       },
     });
   }
-
-  await agent.logout();
 
   return res;
 }
