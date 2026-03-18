@@ -267,6 +267,8 @@ export async function postMastodonToBluesky(
     });
   }
 
+  await agent.logout();
+
   return res;
 }
 
